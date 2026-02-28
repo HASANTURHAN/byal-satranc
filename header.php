@@ -37,7 +37,9 @@ function mobileNavClass($page) {
                             light: '#f0f0f0',
                             dark: '#1a1a2e',
                             accent: '#3b82f6',
-                            gold: '#f59e0b',
+                            gold: '#d4af37',
+                            silver: '#c0c0c0',
+                            bronze: '#cd7f32',
                             board: {
                                 light: '#f0d9b5',
                                 dark: '#b58863'
@@ -49,42 +51,97 @@ function mobileNavClass($page) {
         }
     </script>
     <style>
-        body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #111827; }
+        body {
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            color: #111827;
+        }
         .chess-pattern {
             background-image:
-                linear-gradient(45deg, rgba(181,136,99,0.06) 25%, transparent 25%, transparent 75%, rgba(181,136,99,0.06) 75%),
-                linear-gradient(45deg, rgba(181,136,99,0.06) 25%, transparent 25%, transparent 75%, rgba(181,136,99,0.06) 75%);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px;
+                linear-gradient(45deg, rgba(181,136,99,0.08) 25%, transparent 25%, transparent 75%, rgba(181,136,99,0.08) 75%),
+                linear-gradient(45deg, rgba(181,136,99,0.08) 25%, transparent 25%, transparent 75%, rgba(181,136,99,0.08) 75%);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
         }
-        .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .card { background: white; border-radius: 1rem; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s; }
-        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(181,136,99,0.1);
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid rgba(181,136,99,0.12);
+            box-shadow: 0 1px 3px rgba(181,136,99,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(181,136,99,0.15);
+            transform: translateY(-2px);
+        }
+        .podium-gold {
+            background: linear-gradient(135deg, #f6e05e 0%, #d4af37 100%);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.3);
+        }
+        .podium-silver {
+            background: linear-gradient(135deg, #e2e8f0 0%, #c0c0c0 100%);
+            box-shadow: 0 6px 20px rgba(192,192,192,0.25);
+        }
+        .podium-bronze {
+            background: linear-gradient(135deg, #f6ad55 0%, #cd7f32 100%);
+            box-shadow: 0 6px 20px rgba(205,127,50,0.25);
+        }
+        .winner-glow {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .chess-piece-float { animation: float 3s ease-in-out infinite; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen chess-pattern">
 
 <!-- Navbar -->
-<nav class="glass border-b border-gray-200/60 sticky top-0 z-50">
+<nav class="glass sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
-                <a href="index.php" class="flex items-center gap-3">
-                    <img class="h-10 w-10 object-contain rounded-lg" src="logo.png" alt="BYAL Logo">
+                <a href="index.php" class="flex items-center gap-3 group">
+                    <img class="h-10 w-10 object-contain rounded-lg transition-transform group-hover:scale-105" src="logo.png" alt="BYAL Logo">
                     <div class="hidden md:block">
                         <h1 class="text-base font-bold text-gray-900 leading-tight">Sultangazi BYAL</h1>
-                        <p class="text-xs text-gray-500 leading-tight">Satranc Turnuvasi</p>
+                        <p class="text-xs text-gray-500 leading-tight flex items-center gap-1">
+                            <span class="text-amber-600">♔</span>
+                            <span>Satranc Turnuvasi</span>
+                        </p>
                     </div>
                 </a>
             </div>
 
             <!-- Desktop Menu -->
             <div class="hidden sm:flex sm:items-center sm:gap-1">
-                <a href="index.php" class="inline-flex items-center px-3 py-2 text-sm <?php echo navClass('index.php'); ?> transition">Ana Sayfa</a>
-                <a href="fixtures.php" class="inline-flex items-center px-3 py-2 text-sm <?php echo navClass('fixtures.php'); ?> transition">Fikstur</a>
-                <a href="standings.php" class="inline-flex items-center px-3 py-2 text-sm <?php echo navClass('standings.php'); ?> transition">Puan Durumu</a>
-                <a href="participants.php" class="inline-flex items-center px-3 py-2 text-sm <?php echo navClass('participants.php'); ?> transition">Katilimcilar</a>
-                <a href="rules.php" class="inline-flex items-center px-3 py-2 text-sm <?php echo navClass('rules.php'); ?> transition">Kurallar</a>
+                <a href="index.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('index.php'); ?> transition rounded-lg">
+                    <?php if (navActive('index.php')): ?><span class="text-xs">♔</span><?php endif; ?>
+                    <span>Ana Sayfa</span>
+                </a>
+                <a href="fixtures.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('fixtures.php'); ?> transition rounded-lg">
+                    <?php if (navActive('fixtures.php')): ?><span class="text-xs">♟</span><?php endif; ?>
+                    <span>Fikstur</span>
+                </a>
+                <a href="standings.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('standings.php'); ?> transition rounded-lg">
+                    <?php if (navActive('standings.php')): ?><span class="text-xs">♚</span><?php endif; ?>
+                    <span>Puan Durumu</span>
+                </a>
+                <a href="participants.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('participants.php'); ?> transition rounded-lg">
+                    <?php if (navActive('participants.php')): ?><span class="text-xs">♞</span><?php endif; ?>
+                    <span>Katilimcilar</span>
+                </a>
+                <a href="rules.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('rules.php'); ?> transition rounded-lg">
+                    <?php if (navActive('rules.php')): ?><span class="text-xs">♝</span><?php endif; ?>
+                    <span>Kurallar</span>
+                </a>
 
                 <?php if (isset($_SESSION['admin_logged_in'])): ?>
                     <div class="w-px h-6 bg-gray-200 mx-2"></div>
@@ -119,11 +176,26 @@ function mobileNavClass($page) {
     <!-- Mobile Menu -->
     <div class="sm:hidden hidden" id="mobile-menu">
         <div class="py-2 space-y-1 bg-white border-b border-gray-200 shadow-lg">
-            <a href="index.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('index.php'); ?>">Ana Sayfa</a>
-            <a href="fixtures.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('fixtures.php'); ?>">Fikstur</a>
-            <a href="standings.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('standings.php'); ?>">Puan Durumu</a>
-            <a href="participants.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('participants.php'); ?>">Katilimcilar</a>
-            <a href="rules.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('rules.php'); ?>">Kurallar</a>
+            <a href="index.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('index.php'); ?>">
+                <span class="text-base">♔</span>
+                <span>Ana Sayfa</span>
+            </a>
+            <a href="fixtures.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('fixtures.php'); ?>">
+                <span class="text-base">♟</span>
+                <span>Fikstur</span>
+            </a>
+            <a href="standings.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('standings.php'); ?>">
+                <span class="text-base">♚</span>
+                <span>Puan Durumu</span>
+            </a>
+            <a href="participants.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('participants.php'); ?>">
+                <span class="text-base">♞</span>
+                <span>Katilimcilar</span>
+            </a>
+            <a href="rules.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('rules.php'); ?>">
+                <span class="text-base">♝</span>
+                <span>Kurallar</span>
+            </a>
             <?php if (isset($_SESSION['admin_logged_in'])): ?>
                 <a href="admin.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('admin.php'); ?>">Yonetim Paneli</a>
                 <a href="logout.php" class="block pl-4 pr-4 py-3 text-sm text-red-600 border-l-4 border-transparent">Cikis Yap</a>

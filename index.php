@@ -38,35 +38,41 @@ include 'header.php';
 ?>
 
 <!-- Hero Section -->
-<div class="relative overflow-hidden rounded-2xl mb-8">
-    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-8 sm:p-12 lg:p-16 relative">
+<div class="relative overflow-hidden rounded-2xl mb-8 shadow-2xl">
+    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 sm:p-12 lg:p-16 relative border border-gray-700">
         <!-- Chess pattern overlay -->
-        <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0 opacity-10">
             <div class="chess-pattern w-full h-full"></div>
         </div>
 
+        <!-- Floating chess pieces decoration -->
+        <div class="absolute top-10 left-10 text-6xl opacity-5 chess-piece-float hidden lg:block">♔</div>
+        <div class="absolute bottom-10 left-20 text-5xl opacity-5 chess-piece-float" style="animation-delay: 1s;">♘</div>
+        <div class="absolute top-20 right-32 text-7xl opacity-5 chess-piece-float" style="animation-delay: 2s;">♜</div>
+
         <div class="relative z-10 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold mb-6">
-                <span>&#9812;</span>
-                <span>Okul Ici Etkinlik</span>
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-6 shadow-lg">
+                <span class="text-base">♔</span>
+                <span>Okul Ici Turnuva</span>
             </div>
 
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 leading-tight">
                 <?php echo htmlspecialchars($tournament_name); ?>
             </h1>
 
             <p class="text-gray-300 text-base sm:text-lg mb-8 max-w-2xl leading-relaxed">
                 Okulumuzun en iyilerini belirlemek icin duzenlenen geleneksel satranc turnuvasina hos geldiniz.
-                Stratejini belirle, hamleni yap ve sampiyon ol!
+                <span class="text-amber-400 font-semibold">Stratejini belirle, hamleni yap ve sampiyon ol!</span>
             </p>
 
             <div class="flex flex-wrap gap-3">
-                <a href="fixtures.php" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-blue-600/25">
+                <a href="fixtures.php" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-xl transition shadow-xl shadow-blue-600/30 transform hover:scale-105">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     Fiksturu Gor
                 </a>
-                <a href="standings.php" class="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl transition border border-white/20">
-                    Puan Durumu
+                <a href="standings.php" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl transition border border-white/20 backdrop-blur-sm transform hover:scale-105">
+                    <span>♚</span>
+                    <span>Puan Durumu</span>
                 </a>
                 <a href="rules.php" class="inline-flex items-center px-6 py-3 text-gray-300 hover:text-white text-sm font-medium transition">
                     Kurallar &rarr;
@@ -76,11 +82,11 @@ include 'header.php';
 
         <!-- Right side info -->
         <div class="absolute top-8 right-8 hidden lg:block">
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/10 text-center">
-                <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">
+            <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 text-center shadow-2xl transform hover:scale-105 transition">
+                <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2">
                     <?php echo $status === 'basvurular_acik' ? 'Basvuru Son Tarih' : ($status === 'turnuva_basladi' ? 'Aktif Tur' : 'Turnuva'); ?>
                 </p>
-                <div class="text-3xl font-extrabold text-white mb-1">
+                <div class="text-3xl font-extrabold text-white mb-2">
                     <?php
                     if ($status === 'basvurular_acik') echo htmlspecialchars($deadline);
                     elseif ($status === 'turnuva_basladi') echo $currentRound . '. Tur';
@@ -101,19 +107,23 @@ include 'header.php';
 
 <!-- Stats Cards -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-    <div class="card p-5 text-center">
+    <div class="card p-5 text-center group">
+        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♟</div>
         <div class="text-3xl font-extrabold text-gray-900"><?php echo $playerCount; ?></div>
         <div class="text-xs font-medium text-gray-500 mt-1">Katilimci</div>
     </div>
-    <div class="card p-5 text-center">
+    <div class="card p-5 text-center group">
+        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♞</div>
         <div class="text-3xl font-extrabold text-gray-900"><?php echo $currentRound; ?></div>
         <div class="text-xs font-medium text-gray-500 mt-1">Tur</div>
     </div>
-    <div class="card p-5 text-center">
+    <div class="card p-5 text-center group">
+        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♝</div>
         <div class="text-3xl font-extrabold text-gray-900"><?php echo $completedCount; ?></div>
         <div class="text-xs font-medium text-gray-500 mt-1">Oynanan Mac</div>
     </div>
-    <div class="card p-5 text-center">
+    <div class="card p-5 text-center group">
+        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♚</div>
         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
             <?php echo $status === 'basvurular_acik' ? 'bg-green-100 text-green-700' : ($status === 'turnuva_basladi' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'); ?>">
             <span class="w-1.5 h-1.5 rounded-full <?php echo $status === 'basvurular_acik' ? 'bg-green-500' : ($status === 'turnuva_basladi' ? 'bg-blue-500' : 'bg-gray-500'); ?>"></span>
@@ -137,13 +147,20 @@ include 'header.php';
         </div>
         <div class="divide-y divide-gray-50">
             <?php foreach ($topPlayers as $i => $p): ?>
-            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
-                    <?php echo $i === 0 ? 'bg-amber-100 text-amber-700' : ($i === 1 ? 'bg-gray-100 text-gray-600' : ($i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-500')); ?>">
-                    <?php echo $i + 1; ?>
+            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition group">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-transform group-hover:scale-110
+                    <?php echo $i === 0 ? 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border-amber-300' : ($i === 1 ? 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 border-gray-300' : ($i === 2 ? 'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 border-orange-300' : 'bg-gray-50 text-gray-500 border-gray-200')); ?>">
+                    <?php
+                    if ($i === 0) echo '♔';
+                    elseif ($i === 1) echo '♕';
+                    elseif ($i === 2) echo '♖';
+                    else echo $i + 1;
+                    ?>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate"><?php echo htmlspecialchars($p['name']); ?></p>
+                    <p class="text-sm font-medium text-gray-900 truncate <?php echo $i < 3 ? 'font-semibold' : ''; ?>">
+                        <?php echo htmlspecialchars($p['name']); ?>
+                    </p>
                     <p class="text-xs text-gray-500"><?php echo htmlspecialchars($p['class_name']); ?></p>
                 </div>
                 <div class="text-right">
@@ -165,22 +182,28 @@ include 'header.php';
         </div>
         <div class="divide-y divide-gray-50">
             <?php foreach ($recentMatches as $m): ?>
-            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition">
-                <div class="flex-1 text-right">
-                    <span class="text-sm <?php echo $m['result'] === '1-0' ? 'font-bold text-gray-900' : 'text-gray-500'; ?>">
+            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition group">
+                <div class="flex-1 text-right flex items-center justify-end gap-2">
+                    <?php if ($m['result'] === '1-0'): ?>
+                        <span class="text-green-600 font-bold text-xs">♔</span>
+                    <?php endif; ?>
+                    <span class="text-sm <?php echo $m['result'] === '1-0' ? 'font-bold text-green-700' : 'text-gray-500'; ?>">
                         <?php echo htmlspecialchars($m['p1_name']); ?>
                     </span>
                 </div>
                 <div class="px-3">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
-                        <?php echo $m['result'] === '0.5-0.5' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-900 text-white'; ?>">
+                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold shadow-sm
+                        <?php echo $m['result'] === '0.5-0.5' ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-700 border border-amber-200' : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white'; ?>">
                         <?php echo $m['result'] === '0.5-0.5' ? '½-½' : htmlspecialchars($m['result']); ?>
                     </span>
                 </div>
-                <div class="flex-1">
-                    <span class="text-sm <?php echo $m['result'] === '0-1' ? 'font-bold text-gray-900' : 'text-gray-500'; ?>">
+                <div class="flex-1 flex items-center gap-2">
+                    <span class="text-sm <?php echo $m['result'] === '0-1' ? 'font-bold text-green-700' : 'text-gray-500'; ?>">
                         <?php echo htmlspecialchars($m['p2_name']); ?>
                     </span>
+                    <?php if ($m['result'] === '0-1'): ?>
+                        <span class="text-green-600 font-bold text-xs">♚</span>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>

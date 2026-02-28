@@ -100,16 +100,19 @@ if ($view_round > 0) {
 include 'header.php';
 ?>
 
-<div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-        <h2 class="text-2xl font-bold text-gray-900">Mac Sonuclari</h2>
-        <p class="text-sm text-gray-500 mt-1">Oynanan maclarin sonuclarini girin.</p>
+        <div class="flex items-center gap-3 mb-2">
+            <span class="text-3xl">♜</span>
+            <h2 class="text-3xl font-bold text-gray-900">Mac Sonuclari</h2>
+        </div>
+        <p class="text-sm text-gray-500">Oynanan maclarin sonuclarini girin ve duzenleyin.</p>
     </div>
     <div class="flex gap-2">
-        <a href="matchmaking.php" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition">
+        <a href="matchmaking.php" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition shadow-sm">
             &larr; Eslestirmeler
         </a>
-        <a href="standings.php" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition">
+        <a href="standings.php" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm font-semibold rounded-xl hover:from-gray-900 hover:to-black transition shadow-lg">
             Puan Durumu &rarr;
         </a>
     </div>
@@ -143,29 +146,38 @@ include 'header.php';
 
 <!-- Maç Listesi -->
 <div class="card overflow-hidden mb-8">
-    <div class="px-5 py-4 border-b border-gray-100">
-        <h3 class="font-semibold text-gray-900"><?php echo $view_round; ?>. Tur Maclari</h3>
+    <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">♝</span>
+            <h3 class="font-bold text-gray-900 text-lg"><?php echo $view_round; ?>. Tur Maclari</h3>
+        </div>
     </div>
 
     <?php if (empty($matches)): ?>
     <div class="text-center py-12">
+        <span class="text-4xl mb-3 block opacity-20">♟</span>
         <p class="text-sm text-gray-500">Bu tura ait mac bulunamadi.</p>
     </div>
     <?php else: ?>
-    <div class="divide-y divide-gray-50">
+    <div class="divide-y divide-gray-100">
         <?php foreach ($matches as $match): ?>
-        <div class="px-5 py-4 <?php echo $match['status'] === 'completed' ? 'bg-green-50/30' : ''; ?> hover:bg-gray-50/50 transition">
+        <div class="px-5 py-5 <?php echo $match['status'] === 'completed' ? 'bg-gradient-to-r from-green-50/40 to-emerald-50/20' : 'bg-white'; ?> hover:bg-gray-50/70 transition">
             <div class="flex items-center">
                 <!-- Oyuncu 1 -->
-                <div class="flex-1 text-right pr-3">
+                <div class="flex-1 text-right pr-4">
                     <div class="flex items-center justify-end gap-2">
                         <div>
-                            <span class="text-sm font-semibold <?php echo $match['result'] === '1-0' ? 'text-green-700' : 'text-gray-900'; ?>">
-                                <?php echo htmlspecialchars($match['player1_name']); ?>
-                            </span>
-                            <span class="text-xs text-gray-400 block"><?php echo htmlspecialchars($match['p1_class'] ?? ''); ?></span>
+                            <div class="flex items-center justify-end gap-2">
+                                <?php if ($match['result'] === '1-0'): ?>
+                                    <span class="text-green-600 font-bold text-base">♔</span>
+                                <?php endif; ?>
+                                <span class="text-sm font-semibold <?php echo $match['result'] === '1-0' ? 'text-green-700 font-bold' : 'text-gray-900'; ?>">
+                                    <?php echo htmlspecialchars($match['player1_name']); ?>
+                                </span>
+                            </div>
+                            <span class="text-xs text-gray-400 block mt-0.5"><?php echo htmlspecialchars($match['p1_class'] ?? ''); ?></span>
                         </div>
-                        <div class="w-6 h-6 rounded bg-white border-2 border-gray-200 flex-shrink-0 hidden sm:block"></div>
+                        <div class="w-7 h-7 rounded border-2 border-gray-300 bg-white flex-shrink-0 hidden sm:block shadow-sm"></div>
                     </div>
                 </div>
 
@@ -179,21 +191,21 @@ include 'header.php';
                             <input type="hidden" name="action" value="save_result">
                             <input type="hidden" name="match_id" value="<?php echo $match['id']; ?>">
 
-                            <div class="flex gap-1">
+                            <div class="flex gap-1.5">
                                 <button type="submit" name="result" value="1-0" title="Beyaz Kazandi"
-                                        class="px-3 py-1.5 text-xs font-bold rounded-lg border transition
-                                        <?php echo $match['result'] === '1-0' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'; ?>">
-                                    1-0
+                                        class="px-3 py-2 text-xs font-bold rounded-lg border-2 transition-all transform hover:scale-105 shadow-sm
+                                        <?php echo $match['result'] === '1-0' ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'; ?>">
+                                    <?php echo $match['result'] === '1-0' ? '♔' : ''; ?> 1-0
                                 </button>
                                 <button type="submit" name="result" value="0.5-0.5" title="Berabere"
-                                        class="px-3 py-1.5 text-xs font-bold rounded-lg border transition
-                                        <?php echo $match['result'] === '0.5-0.5' ? 'bg-amber-400 text-amber-900 border-amber-500' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'; ?>">
+                                        class="px-3 py-2 text-xs font-bold rounded-lg border-2 transition-all transform hover:scale-105 shadow-sm
+                                        <?php echo $match['result'] === '0.5-0.5' ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-900 border-amber-500 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-amber-50 hover:border-amber-300'; ?>">
                                     ½-½
                                 </button>
                                 <button type="submit" name="result" value="0-1" title="Siyah Kazandi"
-                                        class="px-3 py-1.5 text-xs font-bold rounded-lg border transition
-                                        <?php echo $match['result'] === '0-1' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'; ?>">
-                                    0-1
+                                        class="px-3 py-2 text-xs font-bold rounded-lg border-2 transition-all transform hover:scale-105 shadow-sm
+                                        <?php echo $match['result'] === '0-1' ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'; ?>">
+                                    0-1 <?php echo $match['result'] === '0-1' ? '♚' : ''; ?>
                                 </button>
                             </div>
 
@@ -208,17 +220,22 @@ include 'header.php';
                 </div>
 
                 <!-- Oyuncu 2 -->
-                <div class="flex-1 pl-3">
+                <div class="flex-1 pl-4">
                     <?php if (empty($match['player2_id'])): ?>
-                        <span class="text-sm text-gray-400 italic">Rakip Yok</span>
+                        <span class="text-sm text-gray-400 italic">Rakip Yok (Bay)</span>
                     <?php else: ?>
                     <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded bg-gray-800 border-2 border-gray-700 flex-shrink-0 hidden sm:block"></div>
+                        <div class="w-7 h-7 rounded bg-gray-800 border-2 border-gray-700 flex-shrink-0 hidden sm:block shadow-sm"></div>
                         <div>
-                            <span class="text-sm font-semibold <?php echo $match['result'] === '0-1' ? 'text-green-700' : 'text-gray-900'; ?>">
-                                <?php echo htmlspecialchars($match['player2_name']); ?>
-                            </span>
-                            <span class="text-xs text-gray-400 block"><?php echo htmlspecialchars($match['p2_class'] ?? ''); ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold <?php echo $match['result'] === '0-1' ? 'text-green-700 font-bold' : 'text-gray-900'; ?>">
+                                    <?php echo htmlspecialchars($match['player2_name']); ?>
+                                </span>
+                                <?php if ($match['result'] === '0-1'): ?>
+                                    <span class="text-green-600 font-bold text-base">♚</span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="text-xs text-gray-400 block mt-0.5"><?php echo htmlspecialchars($match['p2_class'] ?? ''); ?></span>
                         </div>
                     </div>
                     <?php endif; ?>
