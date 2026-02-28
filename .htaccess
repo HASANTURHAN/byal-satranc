@@ -1,0 +1,46 @@
+# BYAL Satranc Turnuvasi
+# Güvenlik ve performans ayarları
+
+# SQLite veritabanı dosyasına erişimi engelle
+<Files "database.sqlite">
+    Require all denied
+</Files>
+
+<Files "database.sqlite-wal">
+    Require all denied
+</Files>
+
+<Files "database.sqlite-shm">
+    Require all denied
+</Files>
+
+# db.php dosyasına doğrudan erişimi engelle
+<Files "db.php">
+    Require all denied
+</Files>
+
+# Dizin listelemeyi kapat
+Options -Indexes
+
+# UTF-8 charset
+AddDefaultCharset UTF-8
+
+# Hata sayfaları
+ErrorDocument 404 /satranc/index.php
+ErrorDocument 403 /satranc/index.php
+
+# Cache headers for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
