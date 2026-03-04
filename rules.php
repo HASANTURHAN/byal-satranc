@@ -2,7 +2,7 @@
 require_once 'db.php';
 include 'header.php';
 
-$deadline = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'deadline'")->fetchColumn() ?: '4 Mart 2026';
+$deadline = get_setting('deadline', '4 Mart 2026');
 ?>
 
 <div class="max-w-3xl mx-auto mb-8">
@@ -10,8 +10,8 @@ $deadline = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 
     <div class="card overflow-hidden mb-6">
         <div class="bg-gray-900 px-8 py-10 text-center">
             <div class="text-4xl mb-3">&#9812;</div>
-            <h2 class="text-2xl font-bold text-white">Turnuva Kurallari ve Isleyis</h2>
-            <p class="text-gray-400 mt-2 text-sm">Sultangazi BYAL Satranc Turnuvasi resmi yonergesi</p>
+            <h2 class="text-2xl font-bold text-white">Turnuva Kuralları ve İşleyiş</h2>
+            <p class="text-gray-400 mt-2 text-sm">2025-2026 Okul Satranç Turnuvası &middot; İsviçre Sistemi (6 Tur) &middot; 68 Oyuncu</p>
         </div>
     </div>
 

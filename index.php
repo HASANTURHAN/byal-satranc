@@ -1,248 +1,241 @@
 <?php
 require_once 'db.php';
 
-// Turnuva ayarlarını çek
-$stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
-$settings = [];
-while ($row = $stmt->fetch()) {
-    $settings[$row['setting_key']] = $row['setting_value'];
-}
-$status = $settings['tournament_status'] ?? 'basvurular_acik';
-$deadline = $settings['deadline'] ?? '4 Mart 2026';
-$tournament_name = $settings['tournament_name'] ?? 'Sultangazi BYAL Satranc Turnuvasi';
-
 // İstatistikler
-$playerCount = $pdo->query("SELECT COUNT(*) FROM players WHERE is_active = 1")->fetchColumn();
-$matchCount = $pdo->query("SELECT COUNT(*) FROM matches")->fetchColumn();
-$completedCount = $pdo->query("SELECT COUNT(*) FROM matches WHERE status = 'completed'")->fetchColumn();
-$currentRound = $pdo->query("SELECT COALESCE(MAX(round_number), 0) FROM matches")->fetchColumn();
+$total_players = $pdo->query("SELECT COUNT(*) FROM players")->fetchColumn();
+$seed_players = $pdo->query("SELECT COUNT(*) FROM players WHERE is_seed = 1")->fetchColumn();
+$current_round = $pdo->query("SELECT COALESCE(MAX(round), 0) FROM pairings")->fetchColumn();
+$completed_matches = $pdo->query("SELECT COUNT(*) FROM pairings WHERE result IS NOT NULL AND result != ''")->fetchColumn();
+$pending_matches = $pdo->query("SELECT COUNT(*) FROM pairings WHERE result IS NULL OR result = ''")->fetchColumn();
+$total_matches = $completed_matches + $pending_matches;
 
-// Son tamamlanan maçlar
-$recentMatches = $pdo->query("
-    SELECT m.*, p1.name as p1_name, p2.name as p2_name
-    FROM matches m
-    LEFT JOIN players p1 ON m.player1_id = p1.id
-    LEFT JOIN players p2 ON m.player2_id = p2.id
-    WHERE m.status = 'completed' AND m.player2_id IS NOT NULL
-    ORDER BY m.id DESC LIMIT 5
+$tournament_name = get_setting('tournament_name', '2025-2026 Okul Satranç Turnuvası');
+$status = get_setting('tournament_status', 'turnuva_basladi');
+
+// Son 5 sonuç
+$recent = $pdo->query("
+    SELECT p.*,
+           w.name as white_name, w.sinif as white_sinif,
+           b.name as black_name, b.sinif as black_sinif
+    FROM pairings p
+    JOIN players w ON p.white_player_id = w.id
+    LEFT JOIN players b ON p.black_player_id = b.id
+    WHERE p.result IS NOT NULL AND p.result != ''
+    ORDER BY p.played_at DESC, p.id DESC
+    LIMIT 5
 ")->fetchAll();
 
 // Top 5 oyuncu
-$topPlayers = $pdo->query("
-    SELECT * FROM players WHERE is_active = 1
-    ORDER BY points DESC, wins DESC, matches_played DESC
-    LIMIT 5
-")->fetchAll();
+$top5 = $pdo->query("SELECT * FROM players ORDER BY total_points DESC, name ASC LIMIT 5")->fetchAll();
+
+// Seri başı oyuncular
+$seeds = $pdo->query("SELECT * FROM players WHERE is_seed = 1 ORDER BY id")->fetchAll();
 
 include 'header.php';
 ?>
 
 <!-- Hero Section -->
-<div class="relative overflow-hidden rounded-2xl mb-8 shadow-2xl">
-    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 sm:p-12 lg:p-16 relative border border-gray-700">
-        <!-- Chess pattern overlay -->
-        <div class="absolute inset-0 opacity-10">
-            <div class="chess-pattern w-full h-full"></div>
+<div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8 md:p-12 mb-8 shadow-2xl">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-4 right-8 text-8xl chess-piece-float">♔</div>
+        <div class="absolute bottom-4 left-8 text-6xl chess-piece-float" style="animation-delay: 1s;">♚</div>
+        <div class="absolute top-20 right-40 text-5xl chess-piece-float" style="animation-delay: 2s;">♜</div>
+    </div>
+    <div class="relative z-10 max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full text-amber-300 text-sm font-medium mb-4">
+            <span>♔</span>
+            <span>2025-2026 Sezonu</span>
         </div>
-
-        <!-- Floating chess pieces decoration -->
-        <div class="absolute top-10 left-10 text-6xl opacity-5 chess-piece-float hidden lg:block">♔</div>
-        <div class="absolute bottom-10 left-20 text-5xl opacity-5 chess-piece-float" style="animation-delay: 1s;">♘</div>
-        <div class="absolute top-20 right-32 text-7xl opacity-5 chess-piece-float" style="animation-delay: 2s;">♜</div>
-
-        <div class="relative z-10 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-6 shadow-lg">
-                <span class="text-base">♔</span>
-                <span>Okul Ici Turnuva</span>
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-2"><?php echo htmlspecialchars($tournament_name); ?></h1>
+        <p class="text-gray-300 text-lg mb-2">Sultangazi Bahattin Yıldız Anadolu Lisesi</p>
+        <p class="text-gray-400 text-sm mb-6">İsviçre Sistemi (6 Tur) &middot; <?php echo $total_players; ?> Oyuncu &middot; <?php echo $seed_players; ?> Seri Başı</p>
+        <div class="flex flex-wrap gap-4">
+            <div class="bg-white/10 backdrop-blur rounded-xl px-4 py-2">
+                <div class="text-2xl font-bold"><?php echo $total_players; ?></div>
+                <div class="text-xs text-gray-400">Oyuncu</div>
             </div>
-
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 leading-tight">
-                <?php echo htmlspecialchars($tournament_name); ?>
-            </h1>
-
-            <p class="text-gray-300 text-base sm:text-lg mb-8 max-w-2xl leading-relaxed">
-                Okulumuzun en iyilerini belirlemek icin duzenlenen geleneksel satranc turnuvasina hos geldiniz.
-                <span class="text-amber-400 font-semibold">Stratejini belirle, hamleni yap ve sampiyon ol!</span>
-            </p>
-
-            <div class="flex flex-wrap gap-3">
-                <a href="fixtures.php" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-xl transition shadow-xl shadow-blue-600/30 transform hover:scale-105">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    Fiksturu Gor
-                </a>
-                <a href="standings.php" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl transition border border-white/20 backdrop-blur-sm transform hover:scale-105">
-                    <span>♚</span>
-                    <span>Puan Durumu</span>
-                </a>
-                <a href="rules.php" class="inline-flex items-center px-6 py-3 text-gray-300 hover:text-white text-sm font-medium transition">
-                    Kurallar &rarr;
-                </a>
+            <div class="bg-white/10 backdrop-blur rounded-xl px-4 py-2">
+                <div class="text-2xl font-bold"><?php echo $current_round; ?>/6</div>
+                <div class="text-xs text-gray-400">Tur</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-xl px-4 py-2">
+                <div class="text-2xl font-bold"><?php echo $completed_matches; ?></div>
+                <div class="text-xs text-gray-400">Oynanan Maç</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-xl px-4 py-2">
+                <div class="text-2xl font-bold">İsviçre</div>
+                <div class="text-xs text-gray-400">Sistem</div>
             </div>
         </div>
-
-        <!-- Right side info -->
-        <div class="absolute top-8 right-8 hidden lg:block">
-            <div class="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 text-center shadow-2xl transform hover:scale-105 transition">
-                <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2">
-                    <?php echo $status === 'basvurular_acik' ? 'Basvuru Son Tarih' : ($status === 'turnuva_basladi' ? 'Aktif Tur' : 'Turnuva'); ?>
-                </p>
-                <div class="text-3xl font-extrabold text-white mb-2">
-                    <?php
-                    if ($status === 'basvurular_acik') echo htmlspecialchars($deadline);
-                    elseif ($status === 'turnuva_basladi') echo $currentRound . '. Tur';
-                    else echo 'Bitti';
-                    ?>
-                </div>
-                <p class="text-gray-400 text-xs">
-                    <?php
-                    if ($status === 'basvurular_acik') echo 'Basvurular devam ediyor';
-                    elseif ($status === 'turnuva_basladi') echo $completedCount . '/' . $matchCount . ' mac oynandi';
-                    else echo 'Tebrikler!';
-                    ?>
-                </p>
-            </div>
+        <div class="flex flex-wrap gap-3 mt-6">
+            <a href="round.php" class="inline-flex items-center px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition shadow-lg">
+                ♟ Fikstürü Gör
+            </a>
+            <a href="standings.php" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-xl transition border border-white/20">
+                ♚ Puan Durumu
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Stats Cards -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-    <div class="card p-5 text-center group">
-        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♟</div>
-        <div class="text-3xl font-extrabold text-gray-900"><?php echo $playerCount; ?></div>
-        <div class="text-xs font-medium text-gray-500 mt-1">Katilimci</div>
+<!-- İstatistik Kartları -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="card p-5 text-center">
+        <div class="text-3xl font-bold text-gray-900"><?php echo $total_players; ?></div>
+        <div class="text-sm text-gray-500 mt-1">Katılımcı</div>
     </div>
-    <div class="card p-5 text-center group">
-        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♞</div>
-        <div class="text-3xl font-extrabold text-gray-900"><?php echo $currentRound; ?></div>
-        <div class="text-xs font-medium text-gray-500 mt-1">Tur</div>
+    <div class="card p-5 text-center">
+        <div class="text-3xl font-bold text-amber-600"><?php echo $current_round; ?>/6</div>
+        <div class="text-sm text-gray-500 mt-1">Aktif Tur</div>
     </div>
-    <div class="card p-5 text-center group">
-        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♝</div>
-        <div class="text-3xl font-extrabold text-gray-900"><?php echo $completedCount; ?></div>
-        <div class="text-xs font-medium text-gray-500 mt-1">Oynanan Mac</div>
+    <div class="card p-5 text-center">
+        <div class="text-3xl font-bold text-green-600"><?php echo $completed_matches; ?></div>
+        <div class="text-sm text-gray-500 mt-1">Oynanan Maç</div>
     </div>
-    <div class="card p-5 text-center group">
-        <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">♚</div>
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-            <?php echo $status === 'basvurular_acik' ? 'bg-green-100 text-green-700' : ($status === 'turnuva_basladi' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'); ?>">
-            <span class="w-1.5 h-1.5 rounded-full <?php echo $status === 'basvurular_acik' ? 'bg-green-500' : ($status === 'turnuva_basladi' ? 'bg-blue-500' : 'bg-gray-500'); ?>"></span>
-            <?php
-            if ($status === 'basvurular_acik') echo 'Basvuru Acik';
-            elseif ($status === 'turnuva_basladi') echo 'Devam Ediyor';
-            else echo 'Tamamlandi';
-            ?>
-        </div>
-        <div class="text-xs font-medium text-gray-500 mt-2">Durum</div>
+    <div class="card p-5 text-center">
+        <div class="text-3xl font-bold text-orange-500"><?php echo $pending_matches; ?></div>
+        <div class="text-sm text-gray-500 mt-1">Bekleyen Maç</div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- Top 5 -->
-    <?php if (!empty($topPlayers)): ?>
-    <div class="card overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="font-semibold text-gray-900">Puan Siralaması</h3>
-            <a href="standings.php" class="text-xs text-blue-600 hover:text-blue-700 font-medium">Tumunu Gor &rarr;</a>
+<div class="grid md:grid-cols-2 gap-8 mb-8">
+    <!-- Top 5 Sıralama -->
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span class="text-amber-500">♚</span> Puan Sıralaması
+            </h2>
+            <a href="standings.php" class="text-sm text-amber-600 hover:text-amber-700 font-medium">Tümünü Gör &rarr;</a>
         </div>
-        <div class="divide-y divide-gray-50">
-            <?php foreach ($topPlayers as $i => $p): ?>
-            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition group">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-transform group-hover:scale-110
-                    <?php echo $i === 0 ? 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border-amber-300' : ($i === 1 ? 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 border-gray-300' : ($i === 2 ? 'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 border-orange-300' : 'bg-gray-50 text-gray-500 border-gray-200')); ?>">
-                    <?php
-                    if ($i === 0) echo '♔';
-                    elseif ($i === 1) echo '♕';
-                    elseif ($i === 2) echo '♖';
-                    else echo $i + 1;
-                    ?>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate <?php echo $i < 3 ? 'font-semibold' : ''; ?>">
-                        <?php echo htmlspecialchars($p['name']); ?>
-                    </p>
-                    <p class="text-xs text-gray-500"><?php echo htmlspecialchars($p['class_name']); ?></p>
-                </div>
-                <div class="text-right">
-                    <span class="text-sm font-bold text-gray-900"><?php echo number_format($p['points'], 1); ?></span>
-                    <span class="text-xs text-gray-400 ml-0.5">puan</span>
-                </div>
+        <?php if (empty($top5)): ?>
+            <p class="text-gray-500 text-sm">Henüz puan verisi yok.</p>
+        <?php else: ?>
+            <div class="space-y-3">
+                <?php foreach ($top5 as $i => $p): ?>
+                    <div class="flex items-center gap-3 p-2 rounded-lg <?php echo $i === 0 ? 'bg-amber-50' : ''; ?>">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                            <?php echo $i === 0 ? 'bg-amber-100 text-amber-700' : ($i === 1 ? 'bg-gray-100 text-gray-700' : ($i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-500')); ?>">
+                            <?php echo $i === 0 ? '♔' : ($i === 1 ? '♕' : ($i === 2 ? '♖' : ($i + 1))); ?>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-gray-900 truncate">
+                                <?php echo htmlspecialchars($p['name']); ?>
+                                <?php if ($p['is_seed']): ?>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 text-xs seed-badge rounded-full ml-1">⭐</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-xs text-gray-500"><?php echo htmlspecialchars($p['sinif']); ?></div>
+                        </div>
+                        <div class="text-lg font-bold text-gray-900"><?php echo number_format($p['total_points'], 1); ?></div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
-        </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
-    <!-- Son Maçlar -->
-    <?php if (!empty($recentMatches)): ?>
-    <div class="card overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="font-semibold text-gray-900">Son Sonuclar</h3>
-            <a href="fixtures.php" class="text-xs text-blue-600 hover:text-blue-700 font-medium">Tum Maclar &rarr;</a>
+    <!-- Son Sonuçlar -->
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span class="text-green-500">♜</span> Son Sonuçlar
+            </h2>
+            <a href="results.php" class="text-sm text-amber-600 hover:text-amber-700 font-medium">Tümünü Gör &rarr;</a>
         </div>
-        <div class="divide-y divide-gray-50">
-            <?php foreach ($recentMatches as $m): ?>
-            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition group">
-                <div class="flex-1 text-right flex items-center justify-end gap-2">
-                    <?php if ($m['result'] === '1-0'): ?>
-                        <span class="text-green-600 font-bold text-xs">♔</span>
-                    <?php endif; ?>
-                    <span class="text-sm <?php echo $m['result'] === '1-0' ? 'font-bold text-green-700' : 'text-gray-500'; ?>">
-                        <?php echo htmlspecialchars($m['p1_name']); ?>
-                    </span>
-                </div>
-                <div class="px-3">
-                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold shadow-sm
-                        <?php echo $m['result'] === '0.5-0.5' ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-700 border border-amber-200' : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white'; ?>">
-                        <?php echo $m['result'] === '0.5-0.5' ? '½-½' : htmlspecialchars($m['result']); ?>
-                    </span>
-                </div>
-                <div class="flex-1 flex items-center gap-2">
-                    <span class="text-sm <?php echo $m['result'] === '0-1' ? 'font-bold text-green-700' : 'text-gray-500'; ?>">
-                        <?php echo htmlspecialchars($m['p2_name']); ?>
-                    </span>
-                    <?php if ($m['result'] === '0-1'): ?>
-                        <span class="text-green-600 font-bold text-xs">♚</span>
-                    <?php endif; ?>
-                </div>
+        <?php if (empty($recent)): ?>
+            <p class="text-gray-500 text-sm">Henüz tamamlanan maç yok.</p>
+        <?php else: ?>
+            <div class="space-y-3">
+                <?php foreach ($recent as $m): ?>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                        <div class="flex-1 text-right">
+                            <div class="font-medium text-sm <?php echo $m['result'] === '1-0' ? 'text-green-700 font-bold' : 'text-gray-700'; ?> truncate">
+                                <?php echo htmlspecialchars($m['white_name']); ?>
+                            </div>
+                            <div class="text-xs text-gray-400"><?php echo htmlspecialchars($m['white_sinif']); ?></div>
+                        </div>
+                        <div class="px-3 py-1 rounded-lg text-xs font-bold
+                            <?php echo $m['result'] === '1/2-1/2' ? 'bg-amber-100 text-amber-700' : 'bg-gray-900 text-white'; ?>">
+                            <?php echo $m['result'] === '1/2-1/2' ? '½-½' : htmlspecialchars($m['result']); ?>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-sm <?php echo $m['result'] === '0-1' ? 'text-green-700 font-bold' : 'text-gray-700'; ?> truncate">
+                                <?php echo htmlspecialchars($m['black_name'] ?? 'BYE'); ?>
+                            </div>
+                            <div class="text-xs text-gray-400"><?php echo htmlspecialchars($m['black_sinif'] ?? ''); ?></div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
-        </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
-
-    <?php if (empty($topPlayers) && empty($recentMatches)): ?>
-    <!-- Empty state -->
-    <div class="lg:col-span-2 card p-12 text-center">
-        <div class="text-5xl mb-4">&#9812;</div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Turnuva Henuz Baslamadi</h3>
-        <p class="text-sm text-gray-500 max-w-md mx-auto">Basvurular devam ediyor. Katilimci listesini gorebilir ve kurallari okuyabilirsiniz.</p>
-        <div class="flex justify-center gap-3 mt-6">
-            <a href="participants.php" class="text-sm font-medium text-blue-600 hover:text-blue-700">Katilimcilar</a>
-            <span class="text-gray-300">|</span>
-            <a href="rules.php" class="text-sm font-medium text-blue-600 hover:text-blue-700">Kurallar</a>
-        </div>
-    </div>
-    <?php endif; ?>
 </div>
 
-<!-- Puanlama Bilgi -->
+<!-- Seri Başı Oyuncular -->
 <div class="card p-6 mb-8">
-    <h3 class="font-semibold text-gray-900 mb-4">Puanlama Sistemi</h3>
-    <div class="grid grid-cols-3 gap-4 text-center">
-        <div class="p-3 rounded-xl bg-green-50 border border-green-100">
-            <div class="text-2xl font-bold text-green-600">1</div>
-            <div class="text-xs text-green-700 font-medium mt-1">Galibiyet</div>
+    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+        <span class="text-amber-500">⭐</span> Seri Başı Oyuncular (<?php echo $seed_players; ?> Kişi)
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <?php foreach ($seeds as $i => $s): ?>
+            <div class="text-center p-4 rounded-xl bg-gradient-to-b from-amber-50 to-white border border-amber-200">
+                <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold mx-auto mb-2">
+                    <?php echo $i + 1; ?>
+                </div>
+                <div class="font-semibold text-sm text-gray-900"><?php echo htmlspecialchars($s['name']); ?></div>
+                <div class="text-xs text-gray-500"><?php echo htmlspecialchars($s['sinif']); ?> – No: <?php echo htmlspecialchars($s['school_no']); ?></div>
+                <div class="mt-1 text-sm font-bold text-amber-600"><?php echo number_format($s['total_points'], 1); ?> puan</div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<!-- Puanlama Sistemi -->
+<div class="card p-6 mb-8">
+    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+        <span>♝</span> Puanlama Sistemi
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center p-4 rounded-xl bg-green-50 border border-green-200">
+            <div class="text-2xl font-bold text-green-700">1</div>
+            <div class="text-sm text-green-600">Galibiyet</div>
         </div>
-        <div class="p-3 rounded-xl bg-yellow-50 border border-yellow-100">
-            <div class="text-2xl font-bold text-yellow-600">0.5</div>
-            <div class="text-xs text-yellow-700 font-medium mt-1">Beraberlik</div>
+        <div class="text-center p-4 rounded-xl bg-amber-50 border border-amber-200">
+            <div class="text-2xl font-bold text-amber-700">0.5</div>
+            <div class="text-sm text-amber-600">Beraberlik</div>
         </div>
-        <div class="p-3 rounded-xl bg-red-50 border border-red-100">
-            <div class="text-2xl font-bold text-red-600">0</div>
-            <div class="text-xs text-red-700 font-medium mt-1">Maglubiyet</div>
+        <div class="text-center p-4 rounded-xl bg-red-50 border border-red-200">
+            <div class="text-2xl font-bold text-red-700">0</div>
+            <div class="text-sm text-red-600">Mağlubiyet</div>
+        </div>
+        <div class="text-center p-4 rounded-xl bg-blue-50 border border-blue-200">
+            <div class="text-2xl font-bold text-blue-700">1</div>
+            <div class="text-sm text-blue-600">BYE (Bay)</div>
         </div>
     </div>
+</div>
+
+<!-- Hızlı Linkler -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <a href="round.php" class="card p-5 text-center group">
+        <div class="text-3xl mb-2">♟</div>
+        <div class="font-semibold text-gray-900 group-hover:text-amber-600 transition">Fikstür</div>
+        <div class="text-xs text-gray-500">Maç Eşleştirmeleri</div>
+    </a>
+    <a href="results.php" class="card p-5 text-center group">
+        <div class="text-3xl mb-2">♜</div>
+        <div class="font-semibold text-gray-900 group-hover:text-amber-600 transition">Sonuçlar</div>
+        <div class="text-xs text-gray-500">Maç Sonuçları</div>
+    </a>
+    <a href="standings.php" class="card p-5 text-center group">
+        <div class="text-3xl mb-2">♚</div>
+        <div class="font-semibold text-gray-900 group-hover:text-amber-600 transition">Puan Durumu</div>
+        <div class="text-xs text-gray-500">Canlı Sıralama</div>
+    </a>
+    <a href="players.php" class="card p-5 text-center group">
+        <div class="text-3xl mb-2">♞</div>
+        <div class="font-semibold text-gray-900 group-hover:text-amber-600 transition">Katılımcılar</div>
+        <div class="text-xs text-gray-500"><?php echo $total_players; ?> Oyuncu</div>
+    </a>
 </div>
 
 <?php include 'footer.php'; ?>

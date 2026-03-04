@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $adminCount = 0;
             }
 
-            if ($adminCount == 0 && $password === 'byal2026') {
+            if ($adminCount == 0 && $password === 'kurnazgezi26') {
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['admin_username'] = 'admin';
                 $_SESSION['admin_role'] = 'admin';

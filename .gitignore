@@ -1,3 +1,8 @@
 database.sqlite
 database.sqlite-wal
 database.sqlite-shm
+database.sqlite.bak
+uploads/match_photos/*
+!uploads/match_photos/.gitkeep
+tournament_players.csv
+tournament_round1_pairings.csv

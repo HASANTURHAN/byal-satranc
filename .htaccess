@@ -19,6 +19,16 @@
     Require all denied
 </Files>
 
+# CSV dosyalarını engelle
+<Files "*.csv">
+    Require all denied
+</Files>
+
+# Import scriptini engelle
+<Files "import_data.php">
+    Require all denied
+</Files>
+
 # Dizin listelemeyi kapat
 Options -Indexes
 
