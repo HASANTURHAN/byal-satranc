@@ -43,9 +43,9 @@ include 'header.php';
 <div class="mb-8">
     <div class="flex items-center gap-3 mb-2">
         <span class="text-3xl">&#9820;</span>
-        <h2 class="text-3xl font-bold text-gray-900">Sonuclar</h2>
+        <h2 class="text-3xl font-bold text-gray-900">Sonuçlar</h2>
     </div>
-    <p class="text-sm text-gray-500">Tamamlanan maclarin sonuclari ve detaylari.</p>
+    <p class="text-sm text-gray-500">Tamamlanan maçların sonuçları ve detayları.</p>
 </div>
 
 <!-- Round Filter Buttons -->
@@ -54,7 +54,7 @@ include 'header.php';
     <a href="results.php"
        class="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition
               <?php echo $filterRound === null ? 'bg-gray-900 text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'; ?>">
-        Tum Turlar
+        Tüm Turlar
     </a>
     <?php foreach ($allRounds as $round): ?>
     <a href="results.php?round=<?php echo (int)$round; ?>"
@@ -70,8 +70,8 @@ include 'header.php';
 <?php if (empty($matches)): ?>
 <div class="card p-12 text-center">
     <div class="text-5xl mb-4 opacity-30">&#9812;</div>
-    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henuz tamamlanan mac bulunmuyor</h3>
-    <p class="text-sm text-gray-500">Maclar oynandikca sonuclar burada gorunecektir.</p>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henüz tamamlanan maç bulunmuyor</h3>
+    <p class="text-sm text-gray-500">Maçlar oynadıkça sonuçlar burada görünecektir.</p>
 </div>
 <?php else: ?>
 
@@ -127,7 +127,7 @@ include 'header.php';
                 <span class="text-sm font-medium text-gray-500">Masa <?php echo (int)$match['table_no']; ?></span>
             </div>
             <?php if ($match['is_seed_table']): ?>
-            <span class="seed-badge text-[10px] font-bold px-2 py-0.5 rounded-full">SIRA</span>
+            <span class="seed-badge text-[10px] font-bold px-2 py-0.5 rounded-full">SERİ BAŞI</span>
             <?php endif; ?>
         </div>
 
@@ -218,7 +218,7 @@ include 'header.php';
         ?>
         <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400 inline-block"></span>
-            <span>Toplam: <strong class="text-gray-900"><?php echo $totalMatches; ?></strong> mac</span>
+            <span>Toplam: <strong class="text-gray-900"><?php echo $totalMatches; ?></strong> maç</span>
         </div>
         <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-white border-2 border-gray-400 inline-block"></span>

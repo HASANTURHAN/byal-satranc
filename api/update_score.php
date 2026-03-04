@@ -1,5 +1,5 @@
 <?php
-// api/update_score.php - Mac sonucu guncelleme API
+// api/update_score.php - Maç sonucu güncelleme API
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../db.php';
@@ -8,22 +8,22 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 // Sadece POST kabul et
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Sadece POST istegi kabul edilir.']);
+    echo json_encode(['success' => false, 'message' => 'Sadece POST isteği kabul edilir.']);
     exit;
 }
 
-// Admin kontrolu
+// Admin kontrolü
 if (!is_admin()) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Yetkiniz yok. Lutfen giris yapin.']);
+    echo json_encode(['success' => false, 'message' => 'Yetkiniz yok. Lütfen giriş yapın.']);
     exit;
 }
 
-// CSRF kontrolu
+// CSRF kontrolü
 $csrfToken = $_POST['csrf_token'] ?? '';
 if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Guvenlik dogrulamasi basarisiz. Sayfayi yenileyip tekrar deneyin.']);
+    echo json_encode(['success' => false, 'message' => 'Güvenlik doğrulaması başarısız. Sayfayı yenileyip tekrar deneyin.']);
     exit;
 }
 
@@ -33,23 +33,23 @@ $result = trim($_POST['result'] ?? '');
 
 // Validasyon
 if ($pairingId <= 0) {
-    echo json_encode(['success' => false, 'message' => 'Gecersiz eslestirme ID.']);
+    echo json_encode(['success' => false, 'message' => 'Geçersiz eşleştirme ID.']);
     exit;
 }
 
 $validResults = ['1-0', '0-1', '1/2-1/2'];
 if (!in_array($result, $validResults)) {
-    echo json_encode(['success' => false, 'message' => 'Gecersiz sonuc. 1-0, 0-1 veya 1/2-1/2 secin.']);
+    echo json_encode(['success' => false, 'message' => 'Geçersiz sonuç. 1-0, 0-1 veya 1/2-1/2 seçin.']);
     exit;
 }
 
-// Eslestirmeyi bul
+// Eşleştirmeyi bul
 $stmt = $pdo->prepare("SELECT * FROM pairings WHERE id = ?");
 $stmt->execute([$pairingId]);
 $pairing = $stmt->fetch();
 
 if (!$pairing) {
-    echo json_encode(['success' => false, 'message' => 'Eslestirme bulunamadi.']);
+    echo json_encode(['success' => false, 'message' => 'Eşleştirme bulunamadı.']);
     exit;
 }
 
@@ -58,7 +58,7 @@ $tableNo = $pairing['table_no'];
 $whitePlayerId = $pairing['white_player_id'];
 $blackPlayerId = $pairing['black_player_id'];
 
-// Puanlari hesapla
+// Puanları hesapla
 $whitePoints = 0;
 $blackPoints = 0;
 switch ($result) {
@@ -76,7 +76,7 @@ switch ($result) {
         break;
 }
 
-// Fotograf yukleme islemi
+// Fotoğraf yükleme işlemi
 $uploadDir = __DIR__ . '/../uploads/match_photos/';
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
@@ -86,28 +86,28 @@ $maxFileSize = 5 * 1024 * 1024; // 5MB
 $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
-$whitePhotoPath = $pairing['white_photo']; // mevcut degeri koru
-$blackPhotoPath = $pairing['black_photo']; // mevcut degeri koru
+$whitePhotoPath = $pairing['white_photo']; // mevcut değeri koru
+$blackPhotoPath = $pairing['black_photo']; // mevcut değeri koru
 
-// Beyaz fotograf yukleme
+// Beyaz fotoğraf yükleme
 if (isset($_FILES['white_photo']) && $_FILES['white_photo']['error'] === UPLOAD_ERR_OK) {
     $file = $_FILES['white_photo'];
 
-    // Boyut kontrolu
+    // Boyut kontrolü
     if ($file['size'] > $maxFileSize) {
-        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotografi 5MB\'dan buyuk olamaz.']);
+        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotoğrafı 5MB\'dan büyük olamaz.']);
         exit;
     }
 
-    // Tip kontrolu
+    // Tip kontrolü
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->file($file['tmp_name']);
     if (!in_array($mimeType, $allowedTypes)) {
-        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotografi sadece JPG, PNG veya WebP olabilir.']);
+        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotoğrafı sadece JPG, PNG veya WebP olabilir.']);
         exit;
     }
 
-    // Uzanti belirle
+    // Uzantı belirle
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowedExtensions)) {
         $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -117,7 +117,7 @@ if (isset($_FILES['white_photo']) && $_FILES['white_photo']['error'] === UPLOAD_
     $filename = "round_{$roundNo}_table_{$tableNo}_white.{$ext}";
     $targetPath = $uploadDir . $filename;
 
-    // Eski dosyayi sil (farkli uzantida olabilir)
+    // Eski dosyayı sil (farkli uzantida olabilir)
     foreach ($allowedExtensions as $oldExt) {
         $oldFile = $uploadDir . "round_{$roundNo}_table_{$tableNo}_white.{$oldExt}";
         if (file_exists($oldFile) && $oldFile !== $targetPath) {
@@ -128,30 +128,30 @@ if (isset($_FILES['white_photo']) && $_FILES['white_photo']['error'] === UPLOAD_
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         $whitePhotoPath = "uploads/match_photos/{$filename}";
     } else {
-        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotografi yuklenemedi.']);
+        echo json_encode(['success' => false, 'message' => 'Beyaz oyuncu fotoğrafı yüklenemedi.']);
         exit;
     }
 }
 
-// Siyah fotograf yukleme
+// Siyah fotoğraf yükleme
 if (isset($_FILES['black_photo']) && $_FILES['black_photo']['error'] === UPLOAD_ERR_OK) {
     $file = $_FILES['black_photo'];
 
-    // Boyut kontrolu
+    // Boyut kontrolü
     if ($file['size'] > $maxFileSize) {
-        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotografi 5MB\'dan buyuk olamaz.']);
+        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotoğrafı 5MB\'dan büyük olamaz.']);
         exit;
     }
 
-    // Tip kontrolu
+    // Tip kontrolü
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->file($file['tmp_name']);
     if (!in_array($mimeType, $allowedTypes)) {
-        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotografi sadece JPG, PNG veya WebP olabilir.']);
+        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotoğrafı sadece JPG, PNG veya WebP olabilir.']);
         exit;
     }
 
-    // Uzanti belirle
+    // Uzantı belirle
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowedExtensions)) {
         $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -161,7 +161,7 @@ if (isset($_FILES['black_photo']) && $_FILES['black_photo']['error'] === UPLOAD_
     $filename = "round_{$roundNo}_table_{$tableNo}_black.{$ext}";
     $targetPath = $uploadDir . $filename;
 
-    // Eski dosyayi sil
+    // Eski dosyayı sil
     foreach ($allowedExtensions as $oldExt) {
         $oldFile = $uploadDir . "round_{$roundNo}_table_{$tableNo}_black.{$oldExt}";
         if (file_exists($oldFile) && $oldFile !== $targetPath) {
@@ -172,16 +172,16 @@ if (isset($_FILES['black_photo']) && $_FILES['black_photo']['error'] === UPLOAD_
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         $blackPhotoPath = "uploads/match_photos/{$filename}";
     } else {
-        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotografi yuklenemedi.']);
+        echo json_encode(['success' => false, 'message' => 'Siyah oyuncu fotoğrafı yüklenemedi.']);
         exit;
     }
 }
 
-// Veritabani guncelleme (transaction ile)
+// Veritabanı güncelleme (transaction ile)
 try {
     $pdo->beginTransaction();
 
-    // Pairings tablosunu guncelle
+    // Pairings tablosunu güncelle
     $updateStmt = $pdo->prepare("
         UPDATE pairings
         SET result = ?,
@@ -201,7 +201,7 @@ try {
         $pairingId
     ]);
 
-    // Beyaz oyuncunun toplam puanini yeniden hesapla
+    // Beyaz oyuncunun toplam puanını yeniden hesapla
     $calcWhite = $pdo->prepare("
         SELECT COALESCE(SUM(white_points), 0)
         FROM pairings
@@ -223,7 +223,7 @@ try {
     $updateWhitePlayer = $pdo->prepare("UPDATE players SET total_points = ? WHERE id = ?");
     $updateWhitePlayer->execute([$whiteTotalPoints, $whitePlayerId]);
 
-    // Siyah oyuncunun toplam puanini yeniden hesapla
+    // Siyah oyuncunun toplam puanını yeniden hesapla
     $calcBlack = $pdo->prepare("
         SELECT COALESCE(SUM(white_points), 0)
         FROM pairings
@@ -249,7 +249,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'message' => 'Sonuc basariyla kaydedildi.',
+        'message' => 'Sonuç başarıyla kaydedildi.',
         'white_points' => $whiteTotalPoints,
         'black_points' => $blackTotalPoints,
         'result' => $result
@@ -260,6 +260,6 @@ try {
     error_log("Score update error: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Veritabani hatasi olustu. Lutfen tekrar deneyin.'
+        'message' => 'Veritabanı hatası oluştu. Lütfen tekrar deneyin.'
     ]);
 }

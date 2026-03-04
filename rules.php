@@ -24,11 +24,11 @@ $deadline = get_setting('deadline', '4 Mart 2026');
                 Genel Kurallar
             </h3>
             <ul class="space-y-2.5 text-sm text-gray-600">
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Turnuva okulumuz ogrencileri arasinda duzenlenmektedir ve katilim ucretsizdir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Maclar ilan edilen gun ve saatte, belirlenen sinifta/salonda oynanacaktir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Mazeretsiz olarak mac saatinde hazir bulunmayan oyuncu, maci <strong>hukmen kaybetmis</strong> sayilir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Sportmenlik disi davranista bulunan oyuncular hakem karariyla ihrac edilebilir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Dokunulan tas oynanir, birakilan tas geri alinamaz.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Turnuva okulumuz öğrencileri arasında düzenlenmektedir ve katılım ücretsizdir.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Maçlar ilan edilen gün ve saatte, belirlenen sınıfta/salonda oynanacaktır.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Mazeretsiz olarak maç saatinde hazır bulunmayan oyuncu, maçı <strong>hükmen kaybetmiş</strong> sayılır.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Sportmenlik dışı davranışta bulunan oyuncular hakem kararıyla ihraç edilebilir.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Dokunulan taş oynanır, bırakılan taş geri alınamaz.</li>
             </ul>
         </div>
 
@@ -38,7 +38,7 @@ $deadline = get_setting('deadline', '4 Mart 2026');
                 <span class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center text-green-600 text-sm font-bold">2</span>
                 Puanlama Sistemi
             </h3>
-            <p class="text-sm text-gray-600 mb-4">Standart satranc puanlama sistemi uygulanir:</p>
+            <p class="text-sm text-gray-600 mb-4">Standart satranç puanlama sistemi uygulanır:</p>
             <div class="grid grid-cols-3 gap-3">
                 <div class="text-center p-4 rounded-xl bg-green-50 border border-green-100">
                     <div class="text-2xl font-bold text-green-600">1</div>
@@ -50,7 +50,7 @@ $deadline = get_setting('deadline', '4 Mart 2026');
                 </div>
                 <div class="text-center p-4 rounded-xl bg-red-50 border border-red-100">
                     <div class="text-2xl font-bold text-red-600">0</div>
-                    <div class="text-xs text-red-700 font-medium mt-1">Maglubiyet</div>
+                    <div class="text-xs text-red-700 font-medium mt-1">Mağlubiyet</div>
                 </div>
             </div>
         </div>
@@ -59,13 +59,13 @@ $deadline = get_setting('deadline', '4 Mart 2026');
         <div class="card p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-sm font-bold">3</span>
-                Eslestirme Sistemi
+                Eşleştirme Sistemi
             </h3>
             <ul class="space-y-2.5 text-sm text-gray-600">
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span><strong>1. Tur:</strong> Tum katilimcilar arasinda tamamen rastgele eslestirme yapilir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span><strong>Sonraki Turlar:</strong> Isvicre Sistemi ile birbirine yakin puanli oyuncular eslestirilir.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Ayni iki oyuncu birden fazla kez birbirleriyle eslestirilmez.</li>
-                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Tek sayi katilimcida en dusuk puanli oyuncu BAY gecer ve otomatik 1 puan alir.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span><strong>1. Tur:</strong> Tüm katılımcılar arasında tamamen rastgele eşleştirme yapılır.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span><strong>Sonraki Turlar:</strong> İsviçre Sistemi ile birbirine yakın puanlı oyuncular eşleştirilir.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Aynı iki oyuncu birden fazla kez birbirleriyle eşleştirilmez.</li>
+                <li class="flex gap-2"><span class="text-gray-400 mt-0.5">&#8226;</span>Tek sayı katılımcıda en düşük puanlı oyuncu BAY geçer ve otomatik 1 puan alır.</li>
             </ul>
         </div>
 
@@ -73,11 +73,11 @@ $deadline = get_setting('deadline', '4 Mart 2026');
         <div class="card p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span class="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center text-red-600 text-sm font-bold">4</span>
-                Itiraz ve Anlaşmazliklar
+                İtiraz ve Anlaşmazlıklar
             </h3>
             <p class="text-sm text-gray-600">
-                Oyun sirasinda her turlu kural ihlali veya anlasmazlik durumunda oyunu durdurup
-                <strong>Gorevli Hakemi</strong> cagirmaniz gerekmektedir. Hakem karari nihaidir.
+                Oyun sırasında her türlü kural ihlali veya anlaşmazlık durumunda oyunu durdurup
+                <strong>Görevli Hakemi</strong> çağırmanız gerekmektedir. Hakem kararı nihaidir.
             </p>
         </div>
 
@@ -88,10 +88,10 @@ $deadline = get_setting('deadline', '4 Mart 2026');
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                 </svg>
                 <div>
-                    <h4 class="text-sm font-semibold text-blue-800 mb-1">Basvuru Bilgisi</h4>
+                    <h4 class="text-sm font-semibold text-blue-800 mb-1">Başvuru Bilgisi</h4>
                     <p class="text-sm text-blue-700">
-                        Basvurular icin son tarih <strong><?php echo htmlspecialchars($deadline); ?></strong>'dir.
-                        Basvurular okul idaresine veya ilgili kulup danisman ogretmenine sahsen yapilmalidir.
+                        Başvurular için son tarih <strong><?php echo htmlspecialchars($deadline); ?></strong>'dir.
+                        Başvurular okul idaresine veya ilgili kulüp danışman öğretmenine şahsen yapılmalıdır.
                     </p>
                 </div>
             </div>

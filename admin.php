@@ -71,8 +71,8 @@ include 'header.php';
 <!-- Page Header -->
 <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-        <h2 class="text-2xl font-bold text-gray-900">Skor Girisi Paneli</h2>
-        <p class="text-sm text-gray-500 mt-1">Mac sonuclarini girin ve fotograflari yukleyin.</p>
+        <h2 class="text-2xl font-bold text-gray-900">Skor Girişi Paneli</h2>
+        <p class="text-sm text-gray-500 mt-1">Maç sonuçlarını girin ve fotoğrafları yükleyin.</p>
     </div>
     <div class="flex gap-2">
         <a href="standings.php" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition">
@@ -85,7 +85,7 @@ include 'header.php';
 <!-- Genel Bilgi toast alanı -->
 <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
 
-<!-- Turnuva Ozeti -->
+<!-- Turnuva Özeti -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
     <div class="card p-4 text-center">
         <div class="text-2xl font-bold text-gray-900"><?= $totalPlayers ?></div>
@@ -97,11 +97,11 @@ include 'header.php';
     </div>
     <div class="card p-4 text-center">
         <div class="text-2xl font-bold text-green-600"><?= $totalAllCompleted ?></div>
-        <div class="text-xs text-gray-500 mt-1">Tamamlanan Mac</div>
+        <div class="text-xs text-gray-500 mt-1">Tamamlanan Maç</div>
     </div>
     <div class="card p-4 text-center">
         <div class="text-2xl font-bold text-amber-600"><?= $totalAllMatches - $totalAllCompleted ?></div>
-        <div class="text-xs text-gray-500 mt-1">Bekleyen Mac</div>
+        <div class="text-xs text-gray-500 mt-1">Bekleyen Maç</div>
     </div>
 </div>
 
@@ -109,9 +109,9 @@ include 'header.php';
 <div class="card p-4 mb-6">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3 flex-wrap">
-            <span class="text-sm font-semibold text-gray-700">Tur Sec:</span>
+            <span class="text-sm font-semibold text-gray-700">Tur Seç:</span>
             <?php if (empty($allRounds)): ?>
-                <span class="text-sm text-gray-400">Henuz tur olusturulmadi.</span>
+                <span class="text-sm text-gray-400">Henüz tur oluşturulmadı.</span>
             <?php else: ?>
                 <?php foreach ($allRounds as $r): ?>
                     <a href="admin.php?round=<?= $r['round_number'] ?>"
@@ -131,7 +131,7 @@ include 'header.php';
         <?php if ($selectedRound > 0 && $totalMatches > 0): ?>
         <div class="flex items-center gap-2">
             <div class="text-sm text-gray-500">
-                <span class="font-semibold text-gray-900"><?= $completedMatches ?></span> / <?= $totalMatches ?> mac tamamlandi
+                <span class="font-semibold text-gray-900"><?= $completedMatches ?></span> / <?= $totalMatches ?> maç tamamlandı
             </div>
             <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all duration-500
@@ -143,7 +143,57 @@ include 'header.php';
     </div>
 </div>
 
-<!-- Eslesme Listesi ve Skor Girisi -->
+<!-- Tur Takvim Bilgileri Düzenleme -->
+<?php if ($selectedRound > 0):
+    $schedStmt = $pdo->prepare("SELECT match_date, match_time, match_period, match_location FROM rounds WHERE round_number = ?");
+    $schedStmt->execute([$selectedRound]);
+    $sched = $schedStmt->fetch() ?: ['match_date' => '', 'match_time' => '', 'match_period' => '', 'match_location' => ''];
+?>
+<div class="card p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Tur <?= $selectedRound ?> Takvim Bilgileri
+        </h3>
+        <span id="schedule-msg" class="text-xs font-medium hidden"></span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Tarih</label>
+            <input type="text" id="sched_date" value="<?= htmlspecialchars($sched['match_date'] ?? '') ?>"
+                   placeholder="Örn: 10 Mart 2026, Pazartesi"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Saat</label>
+            <input type="text" id="sched_time" value="<?= htmlspecialchars($sched['match_time'] ?? '') ?>"
+                   placeholder="Örn: 13:30 - 15:00"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Ders Saati</label>
+            <input type="text" id="sched_period" value="<?= htmlspecialchars($sched['match_period'] ?? '') ?>"
+                   placeholder="Örn: 5. ve 6. Ders Saati"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Mekan</label>
+            <input type="text" id="sched_location" value="<?= htmlspecialchars($sched['match_location'] ?? '') ?>"
+                   placeholder="Örn: Kütüphane / Konferans Salonu"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+    </div>
+    <div class="mt-3 flex justify-end">
+        <button type="button" onclick="saveSchedule()" id="sched-save-btn"
+                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Takvimi Kaydet
+        </button>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Eşleşme Listesi ve Skor Girişi -->
 <?php if (!empty($pairings)): ?>
 <div class="space-y-3 mb-8">
     <?php foreach ($pairings as $pairing): ?>
@@ -152,11 +202,11 @@ include 'header.php';
         <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/80">
             <span class="text-xs font-bold text-gray-400">MASA <?= $pairing['table_no'] ?></span>
             <?php if ($pairing['is_seed_table']): ?>
-                <span class="seed-badge text-xs px-1.5 py-0.5 rounded-full font-medium">Seribasli</span>
+                <span class="seed-badge text-xs px-1.5 py-0.5 rounded-full font-medium">Seri Başı</span>
             <?php endif; ?>
             <?php if ($pairing['result']): ?>
                 <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                    Tamamlandi
+                    Tamamlandı
                 </span>
             <?php else: ?>
                 <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
@@ -187,7 +237,7 @@ include 'header.php';
                     <?php endif; ?>
                 </div>
 
-                <!-- VS / Sonuc Butonlari -->
+                <!-- VS / Sonuç Butonları -->
                 <div class="flex flex-row lg:flex-col items-center justify-center gap-1.5 px-2">
                     <button type="button"
                             onclick="selectResult(<?= $pairing['id'] ?>, '1-0')"
@@ -238,12 +288,12 @@ include 'header.php';
                 </div>
             </div>
 
-            <!-- Fotograf Yukleme ve Kaydet -->
+            <!-- Fotoğraf Yükleme ve Kaydet -->
             <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-end gap-3">
                 <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">
-                            Beyaz Fotograf
+                            Beyaz Fotoğraf
                             <?php if ($pairing['white_photo']): ?>
                                 <a href="<?= htmlspecialchars($pairing['white_photo']) ?>" target="_blank" class="text-blue-500 hover:underline ml-1">(mevcut)</a>
                             <?php endif; ?>
@@ -254,7 +304,7 @@ include 'header.php';
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">
-                            Siyah Fotograf
+                            Siyah Fotoğraf
                             <?php if ($pairing['black_photo']): ?>
                                 <a href="<?= htmlspecialchars($pairing['black_photo']) ?>" target="_blank" class="text-blue-500 hover:underline ml-1">(mevcut)</a>
                             <?php endif; ?>
@@ -274,7 +324,7 @@ include 'header.php';
                 </button>
             </div>
 
-            <!-- Satir ici mesaj -->
+            <!-- Satır içi mesaj -->
             <div id="message-<?= $pairing['id'] ?>" class="mt-2 text-sm hidden"></div>
         </div>
     </div>
@@ -284,46 +334,46 @@ include 'header.php';
 <div class="card flex items-center justify-center min-h-[300px]">
     <div class="text-center p-8">
         <div class="text-5xl mb-4">&#9812;</div>
-        <h3 class="text-base font-semibold text-gray-900 mb-2">Henuz tur olusturulmadi</h3>
-        <p class="text-sm text-gray-500 mb-4">Turnuva baslatilmamis. Eslestirme motorundan ilk turu olusturun.</p>
-        <p class="text-sm text-gray-500">Ilk tur icin import_data.php scriptini calistirin.</p>
+        <h3 class="text-base font-semibold text-gray-900 mb-2">Henüz tur oluşturulmadı</h3>
+        <p class="text-sm text-gray-500 mb-4">Turnuva başlatılmamış. Eşleştirme motorundan ilk turu oluşturun.</p>
+        <p class="text-sm text-gray-500">İlk tur için import_data.php scriptini çalıştırın.</p>
     </div>
 </div>
 <?php else: ?>
 <div class="card flex items-center justify-center min-h-[200px]">
     <div class="text-center p-8">
-        <p class="text-sm text-gray-500">Bu turda eslestirme bulunamadi.</p>
+        <p class="text-sm text-gray-500">Bu turda eşleştirme bulunamadı.</p>
     </div>
 </div>
 <?php endif; ?>
 
-<!-- Sonraki Turu Olustur Butonu -->
+<!-- Sonraki Turu Oluştur Butonu -->
 <?php if ($allRoundComplete && $totalMatches > 0): ?>
 <div class="card p-6 mb-8 border-2 border-green-200 bg-green-50/50">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
             <h3 class="text-lg font-bold text-gray-900">
-                <?= $selectedRound ?>. Tur Tamamlandi!
+                <?= $selectedRound ?>. Tur Tamamlandı!
             </h3>
             <p class="text-sm text-gray-600 mt-1">
-                Tum maclar sonuclandirildi. Bir sonraki tur icin eslestirme yapabilirsiniz.
+                Tüm maçlar sonuçlandırıldı. Bir sonraki tur için eşleştirme yapabilirsiniz.
             </p>
         </div>
         <button type="button" onclick="generateNextRound()" id="next-round-btn"
            class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/25">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-            Sonraki Turu Olustur
+            Sonraki Turu Oluştur
         </button>
     </div>
 </div>
 <?php endif; ?>
 
-<!-- Secili sonuclar state -->
+<!-- Seçili sonuçlar state -->
 <script>
 const selectedResults = {};
 const csrfToken = '<?= $csrfToken ?>';
 
-// Mevcut sonuclari yukle
+// Mevcut sonuçları yükle
 <?php foreach ($pairings as $p): ?>
 <?php if ($p['result']): ?>
 selectedResults[<?= $p['id'] ?>] = '<?= $p['result'] ?>';
@@ -333,7 +383,7 @@ selectedResults[<?= $p['id'] ?>] = '<?= $p['result'] ?>';
 function selectResult(pairingId, result) {
     selectedResults[pairingId] = result;
 
-    // Butonlari guncelle
+    // Butonları güncelle
     document.querySelectorAll('.result-btn-' + pairingId).forEach(btn => {
         const btnResult = btn.getAttribute('data-result');
         btn.className = 'result-btn result-btn-' + pairingId + ' w-16 py-1.5 rounded-lg text-xs font-bold transition ';
@@ -384,13 +434,51 @@ function showToast(msg, type) {
     }, 3000);
 }
 
+async function saveSchedule() {
+    const btn = document.getElementById('sched-save-btn');
+    const msg = document.getElementById('schedule-msg');
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Kaydediliyor...';
+
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+    formData.append('round_number', <?= $selectedRound ?>);
+    formData.append('match_date', document.getElementById('sched_date').value);
+    formData.append('match_time', document.getElementById('sched_time').value);
+    formData.append('match_period', document.getElementById('sched_period').value);
+    formData.append('match_location', document.getElementById('sched_location').value);
+
+    try {
+        const response = await fetch('api/update_schedule.php', { method: 'POST', body: formData });
+        const data = await response.json();
+        msg.classList.remove('hidden', 'text-green-600', 'text-red-600');
+        if (data.success) {
+            msg.className = 'text-xs font-medium text-green-600';
+            msg.textContent = 'Kaydedildi!';
+            showToast('Takvim bilgileri güncellendi.', 'success');
+        } else {
+            msg.className = 'text-xs font-medium text-red-600';
+            msg.textContent = data.message;
+        }
+        setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+    } catch (err) {
+        msg.className = 'text-xs font-medium text-red-600';
+        msg.textContent = 'Bağlantı hatası.';
+        msg.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+
 async function generateNextRound() {
-    if (!confirm('Sonraki tur eslesmeleri olusturulacak. Devam etmek istiyor musunuz?')) return;
+    if (!confirm('Sonraki tur eşleşmeleri oluşturulacak. Devam etmek istiyor musunuz?')) return;
 
     const btn = document.getElementById('next-round-btn');
     const originalContent = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Olusturuluyor...';
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Oluşturuluyor...';
 
     const formData = new FormData();
     formData.append('csrf_token', csrfToken);
@@ -403,12 +491,12 @@ async function generateNextRound() {
             showToast(data.message, 'success');
             setTimeout(() => { location.href = 'admin.php?round=' + data.round; }, 1500);
         } else {
-            showToast(data.message || 'Bir hata olustu.', 'error');
+            showToast(data.message || 'Bir hata oluştu.', 'error');
             btn.disabled = false;
             btn.innerHTML = originalContent;
         }
     } catch (err) {
-        showToast('Baglanti hatasi: ' + err.message, 'error');
+        showToast('Bağlantı hatası: ' + err.message, 'error');
         btn.disabled = false;
         btn.innerHTML = originalContent;
     }
@@ -417,7 +505,7 @@ async function generateNextRound() {
 async function saveResult(pairingId) {
     const result = selectedResults[pairingId];
     if (!result) {
-        showMessage(pairingId, 'Lutfen bir sonuc secin (1-0, 1/2-1/2 veya 0-1).', 'error');
+        showMessage(pairingId, 'Lütfen bir sonuç seçin (1-0, 1/2-1/2 veya 0-1).', 'error');
         return;
     }
 
@@ -453,25 +541,25 @@ async function saveResult(pairingId) {
             showMessage(pairingId, data.message, 'success');
             showToast('Masa ' + document.querySelector('#pairing-' + pairingId + ' .text-xs.font-bold.text-gray-400').textContent.replace('MASA ', '') + ' kaydedildi!', 'success');
 
-            // Satir durumunu guncelle
+            // Satır durumunu güncelle
             const row = document.getElementById('pairing-' + pairingId);
             const statusBadge = row.querySelector('.px-4.py-2 span:last-child');
             if (statusBadge) {
                 statusBadge.className = 'ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700';
-                statusBadge.textContent = 'Tamamlandi';
+                statusBadge.textContent = 'Tamamlandı';
             }
 
-            // Fotograf inputlarini temizle
+            // Fotoğraf inputlarını temizle
             if (whitePhoto) whitePhoto.value = '';
             if (blackPhoto) blackPhoto.value = '';
 
-            // Ilerleme cubugunu guncelle - sayfayi yenile
+            // İlerleme çubuğunu güncelle - sayfayi yenile
             setTimeout(() => { location.reload(); }, 1500);
         } else {
-            showMessage(pairingId, data.message || 'Bir hata olustu.', 'error');
+            showMessage(pairingId, data.message || 'Bir hata oluştu.', 'error');
         }
     } catch (err) {
-        showMessage(pairingId, 'Baglanti hatasi: ' + err.message, 'error');
+        showMessage(pairingId, 'Bağlantı hatası: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalContent;

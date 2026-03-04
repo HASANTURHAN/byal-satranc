@@ -5,10 +5,10 @@
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="flex items-center gap-2 text-sm text-gray-500">
                 <span class="text-lg">&#9812;</span>
-                <span>Sultangazi Bahattin Yildiz Anadolu Lisesi</span>
+                <span>Sultangazi Bahattin Yıldız Anadolu Lisesi</span>
             </div>
             <p class="text-xs text-gray-400">
-                &copy; <?php echo date('Y'); ?> BYAL Satranc Kulubu
+                &copy; <?php echo date('Y'); ?> BYAL Satranç Kulübü
             </p>
         </div>
     </div>

@@ -16,7 +16,7 @@ foreach ($players as $p) {
 // Group by sinif for summary
 $bySinif = [];
 foreach ($players as $p) {
-    $sinif = $p['sinif'] ?: 'Belirtilmemis';
+    $sinif = $p['sinif'] ?: 'Belirtilmemiş';
     if (!isset($bySinif[$sinif])) $bySinif[$sinif] = 0;
     $bySinif[$sinif]++;
 }
@@ -39,11 +39,11 @@ include 'header.php';
                 <span class="text-base">&#9822;</span>
                 <span>Turnuva Kadrosu</span>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight">Katilimcilar</h1>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight">Katılımcılar</h1>
             <p class="text-gray-400 text-base sm:text-lg">
                 <span class="text-amber-400 font-bold"><?php echo $totalPlayers; ?> Oyuncu</span>
                 <span class="mx-2 text-gray-600">|</span>
-                Turnuvaya kayitli tum oyuncular
+                Turnuvaya kayıtlı tüm oyuncular
             </p>
         </div>
     </div>
@@ -59,12 +59,12 @@ include 'header.php';
     <div class="card p-5 text-center group">
         <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">&#9733;</div>
         <div class="text-3xl font-extrabold text-amber-600"><?php echo $seedCount; ?></div>
-        <div class="text-xs font-medium text-gray-500 mt-1">Seri Basi</div>
+        <div class="text-xs font-medium text-gray-500 mt-1">Seri Başı</div>
     </div>
     <div class="card p-5 text-center group col-span-2 sm:col-span-1">
         <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">&#9814;</div>
         <div class="text-3xl font-extrabold text-gray-900"><?php echo count($bySinif); ?></div>
-        <div class="text-xs font-medium text-gray-500 mt-1">Farkli Sinif</div>
+        <div class="text-xs font-medium text-gray-500 mt-1">Farklı Sınıf</div>
     </div>
 </div>
 
@@ -93,7 +93,7 @@ include 'header.php';
         <input
             type="text"
             id="playerSearch"
-            placeholder="Oyuncu ara (isim, sinif veya okul no)..."
+            placeholder="Oyuncu ara (isim, sınıf veya okul no)..."
             class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-sm transition bg-gray-50 focus:bg-white"
         >
         <div id="searchCount" class="absolute inset-y-0 right-0 pr-4 flex items-center text-xs text-gray-400 font-medium"></div>
@@ -106,9 +106,9 @@ include 'header.php';
         <table class="min-w-full" id="playersTable">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 sm:px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">Sira</th>
+                    <th class="px-4 sm:px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">Sıra</th>
                     <th class="px-4 sm:px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ad Soyad</th>
-                    <th class="px-4 sm:px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Sinif</th>
+                    <th class="px-4 sm:px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Sınıf</th>
                     <th class="px-4 sm:px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Okul No</th>
                     <th class="px-4 sm:px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Toplam Puan</th>
                 </tr>
@@ -133,7 +133,7 @@ include 'header.php';
                                     <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($player['name']); ?></span>
                                     <?php if ($player['is_seed']): ?>
                                     <span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
-                                        &#9733; Seri Basi
+                                        &#9733; Seri Başı
                                     </span>
                                     <?php endif; ?>
                                 </div>
@@ -172,15 +172,15 @@ include 'header.php';
     <!-- No results message (hidden by default) -->
     <div id="noResults" class="hidden p-12 text-center">
         <div class="text-4xl mb-3 opacity-40">&#9822;</div>
-        <p class="text-sm font-medium text-gray-500">Aramanizla eslesen oyuncu bulunamadi.</p>
+        <p class="text-sm font-medium text-gray-500">Aramanızla eşleşen oyuncu bulunamadı.</p>
     </div>
 </div>
 
 <?php else: ?>
 <div class="card p-12 text-center">
     <div class="text-5xl mb-4 opacity-40">&#9812;</div>
-    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henuz katilimci yok</h3>
-    <p class="text-sm text-gray-500">Sisteme henuz oyuncu eklenmemis.</p>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henüz katılımcı yok</h3>
+    <p class="text-sm text-gray-500">Sisteme henüz oyuncu eklenmemiş.</p>
 </div>
 <?php endif; ?>
 

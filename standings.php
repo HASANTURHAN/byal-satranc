@@ -58,7 +58,7 @@ include 'header.php';
                 <span class="text-3xl">&#9818;</span>
                 <h2 class="text-3xl font-bold text-gray-900">Puan Durumu</h2>
             </div>
-            <p class="text-sm text-gray-500">Turnuva genel siralaması ve tur bazli puanlar.</p>
+            <p class="text-sm text-gray-500">Turnuva genel sıralaması ve tur bazlı puanlar.</p>
         </div>
         <div class="flex items-center gap-3">
             <!-- Refresh indicator -->
@@ -67,12 +67,12 @@ include 'header.php';
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Guncelleniyor...</span>
+                <span>Güncelleniyor...</span>
             </div>
             <!-- Last update timestamp -->
             <div id="lastUpdate" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>Son guncelleme: <strong id="updateTime"><?php echo date('H:i:s'); ?></strong></span>
+                <span>Son güncelleme: <strong id="updateTime"><?php echo date('H:i:s'); ?></strong></span>
             </div>
         </div>
     </div>
@@ -153,7 +153,7 @@ include 'header.php';
     <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex items-center justify-between">
         <div class="flex items-center gap-3">
             <span class="text-xl">&#9822;</span>
-            <h3 class="font-bold text-gray-900 text-lg">Genel Siralama</h3>
+            <h3 class="font-bold text-gray-900 text-lg">Genel Sıralama</h3>
         </div>
         <span class="text-xs text-gray-400 font-medium" id="playerCountBadge"><?php echo count($players); ?> oyuncu</span>
     </div>
@@ -161,9 +161,9 @@ include 'header.php';
         <table class="min-w-full" id="standingsTable">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">Sira</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">Sıra</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Oyuncu</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Sinif</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Sınıf</th>
                     <?php for ($r = 1; $r <= min($maxRound, 6); $r++): ?>
                     <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell w-14">T<?php echo $r; ?></th>
                     <?php endfor; ?>
@@ -206,7 +206,7 @@ include 'header.php';
                                     </span>
                                     <?php if ($player['is_seed']): ?>
                                     <span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
-                                        &#9733; Seri Basi
+                                        &#9733; Seri Başı
                                     </span>
                                     <?php endif; ?>
                                 </div>
@@ -242,7 +242,7 @@ include 'header.php';
                         <?php if (!$hasPairing): ?>
                             <span class="text-gray-300 text-sm">-</span>
                         <?php elseif ($isPending): ?>
-                            <span class="text-gray-300 text-sm" title="Sonuc bekleniyor">...</span>
+                            <span class="text-gray-300 text-sm" title="Sonuç bekleniyor">...</span>
                         <?php elseif ($score >= 1): ?>
                             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700 text-xs font-bold">
                                 <?php echo ($score == (int)$score) ? (int)$score : number_format($score, 1); ?>
@@ -292,14 +292,14 @@ include 'header.php';
         </div>
         <div class="p-3 rounded-xl bg-red-50 border border-red-100">
             <div class="text-2xl font-bold text-red-600">0</div>
-            <div class="text-xs text-red-700 font-medium mt-1">Maglubiyet</div>
+            <div class="text-xs text-red-700 font-medium mt-1">Mağlubiyet</div>
         </div>
     </div>
 </div>
 
 <!-- Legend -->
 <div class="card p-4 mb-8">
-    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Gosterge</h4>
+    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Gösterge</h4>
     <div class="flex flex-wrap gap-4 text-xs text-gray-600">
         <div class="flex items-center gap-2">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 text-[10px] font-bold">1</span>
@@ -311,15 +311,15 @@ include 'header.php';
         </div>
         <div class="flex items-center gap-2">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-50 text-red-400 text-[10px] font-bold">0</span>
-            <span>Maglubiyet</span>
+            <span>Mağlubiyet</span>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-gray-300 text-sm font-bold">-</span>
-            <span>Eslesmesi yok</span>
+            <span>Eşleşmesi yok</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="seed-badge text-[9px] px-1.5 py-0.5 rounded font-bold">&#9733; Seri Basi</span>
-            <span>Seri basli oyuncu</span>
+            <span class="seed-badge text-[9px] px-1.5 py-0.5 rounded font-bold">&#9733; Seri Başı</span>
+            <span>Seri başlı oyuncu</span>
         </div>
     </div>
 </div>
@@ -327,8 +327,8 @@ include 'header.php';
 <?php else: ?>
 <div class="card p-12 text-center">
     <div class="text-5xl mb-4 opacity-40">&#9812;</div>
-    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henuz puan durumu olusmadi</h3>
-    <p class="text-sm text-gray-500">Sisteme oyuncu eklenmediginde veya mac oynanmadiginda burada gorunecek.</p>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Henüz puan durumu oluşmadı</h3>
+    <p class="text-sm text-gray-500">Sisteme oyuncu eklenmediğinde veya maç oynanmadığında burada görünecek.</p>
 </div>
 <?php endif; ?>
 
@@ -402,7 +402,7 @@ include 'header.php';
                 html += '<span class="text-gray-300 text-sm">-</span>';
             } else if (val === 'pending') {
                 // Paired but result not entered yet
-                html += '<span class="text-gray-300 text-sm" title="Sonuc bekleniyor">...</span>';
+                html += '<span class="text-gray-300 text-sm" title="Sonuç bekleniyor">...</span>';
             } else {
                 var display = formatScore(val);
                 var cls = scoreClass(val);
@@ -498,7 +498,7 @@ include 'header.php';
             html += '<div class="flex items-center gap-2 flex-wrap">';
             html += '<span class="text-sm font-medium text-gray-900 ' + (isTopThree ? 'font-bold' : '') + '">' + escapeHtml(p.name) + '</span>';
             if (isSeed) {
-                html += '<span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">&#9733; Seri Basi</span>';
+                html += '<span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">&#9733; Seri Başı</span>';
             }
             html += '</div>';
             html += '<span class="text-xs text-gray-400 sm:hidden block mt-0.5">' + escapeHtml(p.sinif || '') + '</span>';
