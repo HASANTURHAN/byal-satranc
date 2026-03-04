@@ -61,10 +61,3 @@ ErrorDocument 403 /satranc/index.php
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
-
-# PHP dosyalarını uploads dizininde çalıştırma
-<Directory "uploads">
-    <FilesMatch "\.php$">
-        Require all denied
-    </FilesMatch>
-</Directory>
