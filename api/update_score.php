@@ -257,8 +257,9 @@ try {
 
 } catch (Exception $e) {
     $pdo->rollBack();
+    error_log("Score update error: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Veritabani hatasi: ' . $e->getMessage()
+        'message' => 'Veritabani hatasi olustu. Lutfen tekrar deneyin.'
     ]);
 }

@@ -1,0 +1,11 @@
+# PHP çalıştırmayı engelle
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+# Sadece resim dosyalarına izin ver
+<FilesMatch "\.(?i:jpg|jpeg|png|webp|gif)$">
+    Require all granted
+</FilesMatch>
+
+Options -Indexes

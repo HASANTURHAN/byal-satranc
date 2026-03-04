@@ -19,6 +19,11 @@
     Require all denied
 </Files>
 
+# Yedek veritabanını engelle
+<Files "database.sqlite.bak">
+    Require all denied
+</Files>
+
 # CSV dosyalarını engelle
 <Files "*.csv">
     Require all denied
@@ -53,4 +58,13 @@ ErrorDocument 403 /satranc/index.php
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
+
+# PHP dosyalarını uploads dizininde çalıştırma
+<Directory "uploads">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+</Directory>

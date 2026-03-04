@@ -22,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
+            session_regenerate_id(true);
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_username'] = $user['username'];
             $_SESSION['admin_role'] = $user['role'];
@@ -29,22 +30,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             header("Location: admin.php");
             exit();
         } else {
-            // Fallback: Eğer admin_users tablosu yoksa veya boşsa, eski sistemi dene
-            try {
-                $checkStmt = $pdo->query("SELECT COUNT(*) FROM admin_users");
-                $adminCount = $checkStmt->fetchColumn();
-            } catch (Exception $e) {
-                $adminCount = 0;
-            }
-
-            if ($adminCount == 0 && $password === 'kurnazgezi26') {
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_username'] = 'admin';
-                $_SESSION['admin_role'] = 'admin';
-                header("Location: admin.php");
-                exit();
-            }
-
             $error_message = "Hatalı kullanıcı adı veya şifre.";
         }
     } else {

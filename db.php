@@ -1,5 +1,10 @@
 <?php
 // db.php - Veritabanı bağlantı dosyası
+
+// Session güvenlik ayarları
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.use_strict_mode', 1);
 $db_file = __DIR__ . '/database.sqlite';
 
 try {
@@ -10,7 +15,8 @@ try {
     $pdo->exec('PRAGMA foreign_keys=ON');
     $pdo->exec("PRAGMA encoding = 'UTF-8'");
 } catch (PDOException $e) {
-    die("Veritabanı bağlantı hatası: " . $e->getMessage());
+    error_log("DB bağlantı hatası: " . $e->getMessage());
+    die("Veritabanı bağlantı hatası. Lütfen yöneticiyle iletişime geçin.");
 }
 
 // Yeni tablo şeması - migration
