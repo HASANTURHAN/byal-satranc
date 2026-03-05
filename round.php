@@ -7,12 +7,7 @@ $csrfToken = $isLoggedIn ? csrf_token() : '';
 // Get all distinct rounds from pairings
 $allRounds = $pdo->query("SELECT DISTINCT round FROM pairings ORDER BY round ASC")->fetchAll(PDO::FETCH_COLUMN);
 
-// Tur takvim bilgilerini çek
-$roundInfoMap = [];
-$riStmt = $pdo->query("SELECT round_number, match_date, match_time, match_period, match_location FROM rounds");
-while ($ri = $riStmt->fetch()) {
-    $roundInfoMap[$ri['round_number']] = $ri;
-}
+// (Takvim bilgileri artık pairings tablosunda, maç bazlı)
 
 // Determine selected round
 $selectedRound = isset($_GET['round']) ? (int)$_GET['round'] : 0;
@@ -166,116 +161,41 @@ include 'header.php';
     <?php endforeach; ?>
 </div>
 
-<!-- Tur Takvim Bilgisi -->
+<!-- Maç Takvimi Özeti -->
 <?php
-    $roundInfo = $roundInfoMap[$selectedRound] ?? null;
-    $hasSchedule = $roundInfo && (!empty($roundInfo['match_date']) || !empty($roundInfo['match_time']) || !empty($roundInfo['match_period']) || !empty($roundInfo['match_location']));
+    // Maçları tarihe göre grupla
+    $scheduleGroups = [];
+    $unscheduled = [];
+    foreach ($pairings as $p) {
+        $dateKey = trim($p['match_date'] ?? '');
+        $timeKey = trim($p['match_time'] ?? '');
+        if ($dateKey || $timeKey) {
+            $key = ($dateKey ?: 'Tarih belirtilmemiş') . ($timeKey ? ' - ' . $timeKey : '');
+            $scheduleGroups[$key] = ($scheduleGroups[$key] ?? 0) + 1;
+        } else {
+            $unscheduled[] = $p;
+        }
+    }
+    $hasAnySchedule = !empty($scheduleGroups);
 ?>
-
-<?php if ($isLoggedIn): ?>
-<!-- Düzenlenebilir Takvim (Admin/Hakem) -->
+<?php if ($hasAnySchedule): ?>
 <div class="card p-5 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+    <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2 mb-3">
+        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Maç Programı
+    </h3>
+    <div class="flex flex-wrap gap-2">
+        <?php foreach ($scheduleGroups as $label => $count): ?>
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-blue-200/60 shadow-sm">
             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            Tur <?php echo $selectedRound; ?> &ndash; Maç Takvimi
-            <span class="text-xs font-normal text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">Düzenlenebilir</span>
-        </h3>
-        <span id="sched-msg" class="text-xs font-medium hidden"></span>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div>
-            <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1">
-                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Tarih
-            </label>
-            <input type="text" id="sched_date" value="<?php echo htmlspecialchars($roundInfo['match_date'] ?? ''); ?>"
-                   placeholder="Örn: 10 Mart 2026, Pazartesi"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            <span class="text-sm font-semibold text-gray-800"><?php echo htmlspecialchars($label); ?></span>
+            <span class="text-xs font-bold bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full"><?php echo $count; ?> maç</span>
         </div>
-        <div>
-            <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1">
-                <svg class="w-3.5 h-3.5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Saat
-            </label>
-            <input type="text" id="sched_time" value="<?php echo htmlspecialchars($roundInfo['match_time'] ?? ''); ?>"
-                   placeholder="Örn: 13:30 - 15:00"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-        </div>
-        <div>
-            <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1">
-                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                Ders Saati
-            </label>
-            <input type="text" id="sched_period" value="<?php echo htmlspecialchars($roundInfo['match_period'] ?? ''); ?>"
-                   placeholder="Örn: 5. ve 6. Ders Saati"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-        </div>
-        <div>
-            <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1">
-                <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Mekân
-            </label>
-            <input type="text" id="sched_location" value="<?php echo htmlspecialchars($roundInfo['match_location'] ?? ''); ?>"
-                   placeholder="Örn: Kütüphane / Konferans Salonu"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-        </div>
-    </div>
-    <div class="mt-3 flex justify-end">
-        <button type="button" onclick="saveSchedule()" id="sched-save-btn"
-                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Takvimi Kaydet
-        </button>
-    </div>
-</div>
-
-<?php elseif ($hasSchedule): ?>
-<!-- Salt Okunur Takvim (Ziyaretçi) -->
-<div class="card p-5 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60">
-    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <?php if (!empty($roundInfo['match_date'])): ?>
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
-            <div>
-                <div class="text-[10px] text-blue-500 font-semibold uppercase">Tarih</div>
-                <div class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($roundInfo['match_date']); ?></div>
-            </div>
-        </div>
-        <?php endif; ?>
-        <?php if (!empty($roundInfo['match_time'])): ?>
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div>
-                <div class="text-[10px] text-violet-500 font-semibold uppercase">Saat</div>
-                <div class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($roundInfo['match_time']); ?></div>
-            </div>
-        </div>
-        <?php endif; ?>
-        <?php if (!empty($roundInfo['match_period'])): ?>
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            </div>
-            <div>
-                <div class="text-[10px] text-emerald-500 font-semibold uppercase">Ders Saati</div>
-                <div class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($roundInfo['match_period']); ?></div>
-            </div>
-        </div>
-        <?php endif; ?>
-        <?php if (!empty($roundInfo['match_location'])): ?>
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-rose-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </div>
-            <div>
-                <div class="text-[10px] text-rose-500 font-semibold uppercase">Mekân</div>
-                <div class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($roundInfo['match_location']); ?></div>
-            </div>
+        <?php endforeach; ?>
+        <?php if (!empty($unscheduled)): ?>
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200/60">
+            <span class="text-sm text-amber-700">Takvim atanmamış:</span>
+            <span class="text-xs font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full"><?php echo count($unscheduled); ?> maç</span>
         </div>
         <?php endif; ?>
     </div>
@@ -388,6 +308,7 @@ include 'header.php';
             <thead class="bg-gray-50/80">
                 <tr>
                     <th class="px-4 py-3 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider w-20">Masa</th>
+                    <th class="px-4 py-3 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider w-36">Tarih / Saat</th>
                     <th class="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">Beyaz Oyuncu</th>
                     <th class="px-4 py-3 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider w-28">Sonuç</th>
                     <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">Siyah Oyuncu</th>
@@ -415,6 +336,24 @@ include 'header.php';
                                 <span class="seed-badge text-[9px] px-1.5 py-0.5 rounded font-bold">S</span>
                             <?php endif; ?>
                         </div>
+                    </td>
+                    <td class="px-4 py-3.5 text-center">
+                        <?php
+                            $mDate = trim($pairing['match_date'] ?? '');
+                            $mTime = trim($pairing['match_time'] ?? '');
+                        ?>
+                        <?php if ($mDate || $mTime): ?>
+                        <div class="flex flex-col items-center gap-0.5">
+                            <?php if ($mDate): ?>
+                            <span class="text-xs font-medium text-gray-700"><?php echo htmlspecialchars($mDate); ?></span>
+                            <?php endif; ?>
+                            <?php if ($mTime): ?>
+                            <span class="text-[11px] text-blue-600 font-semibold"><?php echo htmlspecialchars($mTime); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <?php else: ?>
+                        <span class="text-[11px] text-gray-300 italic">Belirlenmedi</span>
+                        <?php endif; ?>
                     </td>
                     <td class="px-4 py-3.5 text-right">
                         <div class="flex items-center justify-end gap-2">
@@ -488,7 +427,7 @@ include 'header.php';
             $cardBg = $isSeed ? 'bg-green-50/40 border-l-4 border-green-400' : (!$hasResult ? 'bg-amber-50/30' : '');
         ?>
         <div class="px-4 py-4 <?php echo $cardBg; ?>">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                     <span class="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-700"><?php echo (int)$pairing['table_no']; ?></span>
                     <?php if ($isSeed): ?><span class="seed-badge text-[9px] px-1.5 py-0.5 rounded-full font-bold">Seri Başı</span><?php endif; ?>
@@ -503,6 +442,19 @@ include 'header.php';
                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-500 animate-pulse">VS</span>
                 <?php endif; ?>
             </div>
+            <?php
+                $mDateM = trim($pairing['match_date'] ?? '');
+                $mTimeM = trim($pairing['match_time'] ?? '');
+            ?>
+            <?php if ($mDateM || $mTimeM): ?>
+            <div class="flex items-center gap-1.5 mb-3 text-[11px]">
+                <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <?php if ($mDateM): ?><span class="font-medium text-gray-600"><?php echo htmlspecialchars($mDateM); ?></span><?php endif; ?>
+                <?php if ($mTimeM): ?><span class="font-semibold text-blue-600"><?php echo htmlspecialchars($mTimeM); ?></span><?php endif; ?>
+            </div>
+            <?php else: ?>
+            <div class="mb-3"></div>
+            <?php endif; ?>
             <div class="flex items-center">
                 <div class="flex-1 text-right pr-3">
                     <div class="w-5 h-5 rounded border-2 border-gray-300 bg-white inline-block mb-1"></div>
@@ -555,47 +507,5 @@ include 'header.php';
 
 <?php endif; ?>
 
-<?php if ($isLoggedIn): ?>
-<script>
-const csrfToken = '<?php echo $csrfToken; ?>';
-
-async function saveSchedule() {
-    const btn = document.getElementById('sched-save-btn');
-    const msg = document.getElementById('sched-msg');
-    const origText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Kaydediliyor...';
-
-    const formData = new FormData();
-    formData.append('csrf_token', csrfToken);
-    formData.append('round_number', <?php echo $selectedRound; ?>);
-    formData.append('match_date', document.getElementById('sched_date').value);
-    formData.append('match_time', document.getElementById('sched_time').value);
-    formData.append('match_period', document.getElementById('sched_period').value);
-    formData.append('match_location', document.getElementById('sched_location').value);
-
-    try {
-        const response = await fetch('api/update_schedule.php', { method: 'POST', body: formData });
-        const data = await response.json();
-        msg.classList.remove('hidden', 'text-green-600', 'text-red-600');
-        if (data.success) {
-            msg.className = 'text-xs font-medium text-green-600';
-            msg.textContent = 'Kaydedildi!';
-        } else {
-            msg.className = 'text-xs font-medium text-red-600';
-            msg.textContent = data.message;
-        }
-        setTimeout(() => { msg.classList.add('hidden'); }, 3000);
-    } catch (err) {
-        msg.className = 'text-xs font-medium text-red-600';
-        msg.textContent = 'Bağlantı hatası.';
-        msg.classList.remove('hidden');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = origText;
-    }
-}
-</script>
-<?php endif; ?>
 
 <?php include 'footer.php'; ?>

@@ -49,6 +49,7 @@ if ($selectedRound > 0) {
         SELECT p.id, p.round, p.table_no, p.white_player_id, p.black_player_id,
                p.is_seed_table, p.result, p.white_points, p.black_points,
                p.white_photo, p.black_photo, p.played_at,
+               p.match_date, p.match_time,
                w.name AS white_name, w.sinif AS white_sinif,
                b.name AS black_name, b.sinif AS black_sinif
         FROM pairings p
@@ -143,53 +144,42 @@ include 'header.php';
     </div>
 </div>
 
-<!-- Tur Takvim Bilgileri Düzenleme -->
-<?php if ($selectedRound > 0):
-    $schedStmt = $pdo->prepare("SELECT match_date, match_time, match_period, match_location FROM rounds WHERE round_number = ?");
-    $schedStmt->execute([$selectedRound]);
-    $sched = $schedStmt->fetch() ?: ['match_date' => '', 'match_time' => '', 'match_period' => '', 'match_location' => ''];
-?>
-<div class="card p-5 mb-6">
+<!-- Toplu Maç Takvimi Atama -->
+<?php if ($selectedRound > 0 && !empty($pairings)): ?>
+<div class="card p-5 mb-6 border border-blue-200/60 bg-blue-50/30">
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            Tur <?= $selectedRound ?> Takvim Bilgileri
+            Toplu Maç Takvimi Ata
+            <span class="text-xs font-normal text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">Seçili maçlara uygula</span>
         </h3>
-        <span id="schedule-msg" class="text-xs font-medium hidden"></span>
+        <span id="bulk-sched-msg" class="text-xs font-medium hidden"></span>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Tarih</label>
-            <input type="text" id="sched_date" value="<?= htmlspecialchars($sched['match_date'] ?? '') ?>"
-                   placeholder="Örn: 10 Mart 2026, Pazartesi"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="text" id="bulk_date" placeholder="Örn: 10 Mart 2026, Pazartesi"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
         </div>
         <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Saat</label>
-            <input type="text" id="sched_time" value="<?= htmlspecialchars($sched['match_time'] ?? '') ?>"
-                   placeholder="Örn: 13:30 - 15:00"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="text" id="bulk_time" placeholder="Örn: 13:30 - 15:00"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
         </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Ders Saati</label>
-            <input type="text" id="sched_period" value="<?= htmlspecialchars($sched['match_period'] ?? '') ?>"
-                   placeholder="Örn: 5. ve 6. Ders Saati"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Mekan</label>
-            <input type="text" id="sched_location" value="<?= htmlspecialchars($sched['match_location'] ?? '') ?>"
-                   placeholder="Örn: Kütüphane / Konferans Salonu"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <div class="flex items-end gap-2">
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Masalar</label>
+                <input type="text" id="bulk_tables" placeholder="Örn: 1-5 veya 1,3,5,7"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            </div>
+            <button type="button" onclick="bulkAssignSchedule()" id="bulk-assign-btn"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Uygula
+            </button>
         </div>
     </div>
-    <div class="mt-3 flex justify-end">
-        <button type="button" onclick="saveSchedule()" id="sched-save-btn"
-                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Takvimi Kaydet
-        </button>
-    </div>
+    <p class="text-xs text-gray-400">Masa aralığı: "1-5" = Masa 1'den 5'e. Tekli: "1,3,5,7". Boş bırakırsanız tüm maçlara uygulanır.</p>
 </div>
 <?php endif; ?>
 
@@ -199,20 +189,33 @@ include 'header.php';
     <?php foreach ($pairings as $pairing): ?>
     <div class="card overflow-hidden pairing-row" id="pairing-<?= $pairing['id'] ?>"
          data-pairing-id="<?= $pairing['id'] ?>">
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/80">
-            <span class="text-xs font-bold text-gray-400">MASA <?= $pairing['table_no'] ?></span>
-            <?php if ($pairing['is_seed_table']): ?>
-                <span class="seed-badge text-xs px-1.5 py-0.5 rounded-full font-medium">Seri Başı</span>
-            <?php endif; ?>
-            <?php if ($pairing['result']): ?>
-                <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                    Tamamlandı
-                </span>
-            <?php else: ?>
-                <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-                    Bekliyor
-                </span>
-            <?php endif; ?>
+        <div class="px-4 py-2 border-b border-gray-100 bg-gray-50/80">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">MASA <?= $pairing['table_no'] ?></span>
+                <?php if ($pairing['is_seed_table']): ?>
+                    <span class="seed-badge text-xs px-1.5 py-0.5 rounded-full font-medium">Seri Başı</span>
+                <?php endif; ?>
+                <?php if ($pairing['result']): ?>
+                    <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Tamamlandı</span>
+                <?php else: ?>
+                    <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Bekliyor</span>
+                <?php endif; ?>
+            </div>
+            <!-- Maç Tarih/Saat -->
+            <div class="flex items-center gap-2 mt-2">
+                <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="text" id="mdate_<?= $pairing['id'] ?>" value="<?= htmlspecialchars($pairing['match_date'] ?? '') ?>"
+                       placeholder="Tarih (örn: 10 Mart)"
+                       class="flex-1 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white">
+                <svg class="w-3.5 h-3.5 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <input type="text" id="mtime_<?= $pairing['id'] ?>" value="<?= htmlspecialchars($pairing['match_time'] ?? '') ?>"
+                       placeholder="Saat (örn: 13:30)"
+                       class="w-28 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white">
+                <button type="button" onclick="saveMatchSchedule(<?= $pairing['id'] ?>)"
+                        class="text-blue-500 hover:text-blue-700 transition p-1" title="Takvimi Kaydet">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </button>
+            </div>
         </div>
 
         <div class="p-4">
@@ -434,38 +437,86 @@ function showToast(msg, type) {
     }, 3000);
 }
 
-async function saveSchedule() {
-    const btn = document.getElementById('sched-save-btn');
-    const msg = document.getElementById('schedule-msg');
-    const origText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Kaydediliyor...';
+async function saveMatchSchedule(pairingId) {
+    const dateEl = document.getElementById('mdate_' + pairingId);
+    const timeEl = document.getElementById('mtime_' + pairingId);
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+    formData.append('pairing_id', pairingId);
+    formData.append('match_date', dateEl.value);
+    formData.append('match_time', timeEl.value);
+
+    try {
+        const response = await fetch('api/update_match_schedule.php', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) {
+            showToast('Masa ' + data.table_no + ' takvimi kaydedildi.', 'success');
+        } else {
+            showToast(data.message || 'Hata oluştu.', 'error');
+        }
+    } catch (err) {
+        showToast('Bağlantı hatası.', 'error');
+    }
+}
+
+function parseTables(input) {
+    if (!input.trim()) return null; // boş = tüm masalar
+    const tables = [];
+    input.split(',').forEach(part => {
+        part = part.trim();
+        if (part.includes('-')) {
+            const [a, b] = part.split('-').map(Number);
+            for (let i = a; i <= b; i++) tables.push(i);
+        } else if (!isNaN(parseInt(part))) {
+            tables.push(parseInt(part));
+        }
+    });
+    return tables;
+}
+
+async function bulkAssignSchedule() {
+    const dateVal = document.getElementById('bulk_date').value;
+    const timeVal = document.getElementById('bulk_time').value;
+    if (!dateVal && !timeVal) {
+        showToast('Lütfen tarih veya saat girin.', 'error');
+        return;
+    }
+    const tablesInput = document.getElementById('bulk_tables').value;
+    const targetTables = parseTables(tablesInput);
 
     const formData = new FormData();
     formData.append('csrf_token', csrfToken);
-    formData.append('round_number', <?= $selectedRound ?>);
-    formData.append('match_date', document.getElementById('sched_date').value);
-    formData.append('match_time', document.getElementById('sched_time').value);
-    formData.append('match_period', document.getElementById('sched_period').value);
-    formData.append('match_location', document.getElementById('sched_location').value);
+    formData.append('round', <?= $selectedRound ?>);
+    formData.append('match_date', dateVal);
+    formData.append('match_time', timeVal);
+    if (targetTables) formData.append('tables', JSON.stringify(targetTables));
+
+    const btn = document.getElementById('bulk-assign-btn');
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
 
     try {
-        const response = await fetch('api/update_schedule.php', { method: 'POST', body: formData });
+        const response = await fetch('api/update_match_schedule.php', { method: 'POST', body: formData });
         const data = await response.json();
-        msg.classList.remove('hidden', 'text-green-600', 'text-red-600');
         if (data.success) {
-            msg.className = 'text-xs font-medium text-green-600';
-            msg.textContent = 'Kaydedildi!';
-            showToast('Takvim bilgileri güncellendi.', 'success');
+            showToast(data.message, 'success');
+            // Inputları güncelle
+            document.querySelectorAll('.pairing-row').forEach(row => {
+                const pid = row.getAttribute('data-pairing-id');
+                const tableNo = parseInt(row.querySelector('.text-xs.font-bold.text-gray-400')?.textContent?.replace('MASA ', '') || 0);
+                if (!targetTables || targetTables.includes(tableNo)) {
+                    const d = document.getElementById('mdate_' + pid);
+                    const t = document.getElementById('mtime_' + pid);
+                    if (d && dateVal) d.value = dateVal;
+                    if (t && timeVal) t.value = timeVal;
+                }
+            });
         } else {
-            msg.className = 'text-xs font-medium text-red-600';
-            msg.textContent = data.message;
+            showToast(data.message || 'Hata oluştu.', 'error');
         }
-        setTimeout(() => { msg.classList.add('hidden'); }, 3000);
     } catch (err) {
-        msg.className = 'text-xs font-medium text-red-600';
-        msg.textContent = 'Bağlantı hatası.';
-        msg.classList.remove('hidden');
+        showToast('Bağlantı hatası.', 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = origText;

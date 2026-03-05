@@ -83,6 +83,8 @@ try {
         "ALTER TABLE pairings ADD COLUMN white_photo TEXT",
         "ALTER TABLE pairings ADD COLUMN black_photo TEXT",
         "ALTER TABLE pairings ADD COLUMN is_seed_table INTEGER DEFAULT 0",
+        "ALTER TABLE pairings ADD COLUMN match_date TEXT",
+        "ALTER TABLE pairings ADD COLUMN match_time TEXT",
     ];
     foreach ($migrations as $sql) {
         try { $pdo->exec($sql); } catch (Exception $e) {}
