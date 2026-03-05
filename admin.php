@@ -158,13 +158,23 @@ include 'header.php';
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Tarih</label>
-            <input type="text" id="bulk_date" placeholder="Örn: 10 Mart 2026, Pazartesi"
+            <input type="date" id="bulk_date"
                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
         </div>
         <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Saat</label>
-            <input type="text" id="bulk_time" placeholder="Örn: 13:30 - 15:00"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Ders Saati</label>
+            <select id="bulk_time"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                <option value="">-- Ders Seçin --</option>
+                <option value="1. Ders">1. Ders</option>
+                <option value="2. Ders">2. Ders</option>
+                <option value="3. Ders">3. Ders</option>
+                <option value="4. Ders">4. Ders</option>
+                <option value="5. Ders">5. Ders</option>
+                <option value="6. Ders">6. Ders</option>
+                <option value="7. Ders">7. Ders</option>
+                <option value="8. Ders">8. Ders</option>
+            </select>
         </div>
         <div class="flex items-end gap-2">
             <div class="flex-1">
@@ -204,13 +214,17 @@ include 'header.php';
             <!-- Maç Tarih/Saat -->
             <div class="flex items-center gap-2 mt-2">
                 <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <input type="text" id="mdate_<?= $pairing['id'] ?>" value="<?= htmlspecialchars($pairing['match_date'] ?? '') ?>"
-                       placeholder="Tarih (örn: 10 Mart)"
+                <input type="date" id="mdate_<?= $pairing['id'] ?>" value="<?= htmlspecialchars($pairing['match_date'] ?? '') ?>"
                        class="flex-1 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white">
                 <svg class="w-3.5 h-3.5 text-violet-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <input type="text" id="mtime_<?= $pairing['id'] ?>" value="<?= htmlspecialchars($pairing['match_time'] ?? '') ?>"
-                       placeholder="Saat (örn: 13:30)"
-                       class="w-28 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white">
+                <?php $currentTime = htmlspecialchars($pairing['match_time'] ?? ''); ?>
+                <select id="mtime_<?= $pairing['id'] ?>"
+                        class="w-28 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-white">
+                    <option value="">Ders</option>
+                    <?php for ($d = 1; $d <= 8; $d++): $dVal = $d . '. Ders'; ?>
+                    <option value="<?= $dVal ?>" <?= $currentTime === $dVal ? 'selected' : '' ?>><?= $dVal ?></option>
+                    <?php endfor; ?>
+                </select>
                 <button type="button" onclick="saveMatchSchedule(<?= $pairing['id'] ?>)"
                         class="text-blue-500 hover:text-blue-700 transition p-1" title="Takvimi Kaydet">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>

@@ -7,7 +7,19 @@ $csrfToken = $isLoggedIn ? csrf_token() : '';
 // Get all distinct rounds from pairings
 $allRounds = $pdo->query("SELECT DISTINCT round FROM pairings ORDER BY round ASC")->fetchAll(PDO::FETCH_COLUMN);
 
-// (Takvim bilgileri artık pairings tablosunda, maç bazlı)
+// Türkçe tarih formatlama (YYYY-MM-DD → "10 Mart 2026, Pazartesi")
+function formatTurkishDate($dateStr) {
+    if (empty($dateStr)) return '';
+    $ts = strtotime($dateStr);
+    if ($ts === false) return htmlspecialchars($dateStr);
+    $aylar = ['', 'Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    $gunler = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    $gun = (int)date('j', $ts);
+    $ay = (int)date('n', $ts);
+    $yil = date('Y', $ts);
+    $haftaGunu = (int)date('w', $ts);
+    return $gun . ' ' . $aylar[$ay] . ' ' . $yil . ', ' . $gunler[$haftaGunu];
+}
 
 // Determine selected round
 $selectedRound = isset($_GET['round']) ? (int)$_GET['round'] : 0;
@@ -170,7 +182,8 @@ include 'header.php';
         $dateKey = trim($p['match_date'] ?? '');
         $timeKey = trim($p['match_time'] ?? '');
         if ($dateKey || $timeKey) {
-            $key = ($dateKey ?: 'Tarih belirtilmemiş') . ($timeKey ? ' - ' . $timeKey : '');
+            $dateLabel = $dateKey ? formatTurkishDate($dateKey) : 'Tarih belirtilmemiş';
+            $key = $dateLabel . ($timeKey ? ' - ' . $timeKey : '');
             $scheduleGroups[$key] = ($scheduleGroups[$key] ?? 0) + 1;
         } else {
             $unscheduled[] = $p;
@@ -345,7 +358,7 @@ include 'header.php';
                         <?php if ($mDate || $mTime): ?>
                         <div class="flex flex-col items-center gap-0.5">
                             <?php if ($mDate): ?>
-                            <span class="text-xs font-medium text-gray-700"><?php echo htmlspecialchars($mDate); ?></span>
+                            <span class="text-xs font-medium text-gray-700"><?php echo formatTurkishDate($mDate); ?></span>
                             <?php endif; ?>
                             <?php if ($mTime): ?>
                             <span class="text-[11px] text-blue-600 font-semibold"><?php echo htmlspecialchars($mTime); ?></span>
@@ -449,7 +462,7 @@ include 'header.php';
             <?php if ($mDateM || $mTimeM): ?>
             <div class="flex items-center gap-1.5 mb-3 text-[11px]">
                 <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <?php if ($mDateM): ?><span class="font-medium text-gray-600"><?php echo htmlspecialchars($mDateM); ?></span><?php endif; ?>
+                <?php if ($mDateM): ?><span class="font-medium text-gray-600"><?php echo formatTurkishDate($mDateM); ?></span><?php endif; ?>
                 <?php if ($mTimeM): ?><span class="font-semibold text-blue-600"><?php echo htmlspecialchars($mTimeM); ?></span><?php endif; ?>
             </div>
             <?php else: ?>
