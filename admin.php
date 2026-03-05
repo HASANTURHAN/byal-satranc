@@ -64,6 +64,49 @@ if ($selectedRound > 0) {
 
 $allRoundComplete = ($totalMatches > 0 && $completedMatches === $totalMatches);
 
+// --- Bugünkü Maçlar ---
+$viewDate = isset($_GET['view_date']) ? $_GET['view_date'] : date('Y-m-d');
+// Validate date format
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $viewDate)) {
+    $viewDate = date('Y-m-d');
+}
+
+$stmtToday = $pdo->prepare("
+    SELECT p.id, p.round, p.table_no, p.result, p.match_date, p.match_time,
+           w.name AS white_name, w.sinif AS white_sinif,
+           b.name AS black_name, b.sinif AS black_sinif
+    FROM pairings p
+    LEFT JOIN players w ON p.white_player_id = w.id
+    LEFT JOIN players b ON p.black_player_id = b.id
+    WHERE p.match_date = ?
+    ORDER BY p.match_time ASC, p.table_no ASC
+");
+$stmtToday->execute([$viewDate]);
+$todayMatches = $stmtToday->fetchAll();
+
+// Ders bazında grupla
+$todayGroups = [];
+foreach ($todayMatches as $m) {
+    $key = $m['match_time'] ?: 'Belirtilmemiş';
+    $todayGroups[$key][] = $m;
+}
+
+// Türkçe tarih formatlama
+function formatTurkishDateAdmin($dateStr) {
+    if (empty($dateStr)) return '';
+    $ts = strtotime($dateStr);
+    if ($ts === false) return htmlspecialchars($dateStr);
+    $aylar = ['', 'Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    $gunler = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    $gun = (int)date('j', $ts);
+    $ay = (int)date('n', $ts);
+    $yil = date('Y', $ts);
+    $haftaGunu = (int)date('w', $ts);
+    return $gun . ' ' . $aylar[$ay] . ' ' . $yil . ', ' . $gunler[$haftaGunu];
+}
+
+$viewDateTurkish = formatTurkishDateAdmin($viewDate);
+
 $csrfToken = csrf_token();
 
 include 'header.php';
@@ -103,6 +146,115 @@ include 'header.php';
     <div class="card p-4 text-center">
         <div class="text-2xl font-bold text-amber-600"><?= $totalAllMatches - $totalAllCompleted ?></div>
         <div class="text-xs text-gray-500 mt-1">Bekleyen Maç</div>
+    </div>
+</div>
+
+<!-- Bugünkü Maçlar -->
+<div class="card p-5 mb-6 border border-indigo-200/60 bg-indigo-50/20">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Günün Maçları
+            <span class="text-xs font-normal text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full"><?= $viewDateTurkish ?></span>
+        </h3>
+        <div class="flex items-center gap-2">
+            <input type="date" id="view_date_picker" value="<?= htmlspecialchars($viewDate) ?>"
+                   class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                   onchange="window.location.href='admin.php?round=<?= $selectedRound ?>&view_date='+this.value">
+            <?php if (!empty($todayMatches)): ?>
+            <button type="button" onclick="showWhatsAppModal()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp Mesajı
+            </button>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <?php if (empty($todayMatches)): ?>
+    <div class="text-center py-6">
+        <div class="text-3xl mb-2 opacity-40">♟</div>
+        <p class="text-sm text-gray-500">Bu tarihte planlanmış maç bulunmuyor.</p>
+    </div>
+    <?php else: ?>
+    <div class="space-y-4">
+        <?php foreach ($todayGroups as $ders => $matches): ?>
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-lg">📚 <?= htmlspecialchars($ders) ?></span>
+                <span class="text-xs text-gray-400"><?= count($matches) ?> maç</span>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
+                            <th class="px-3 py-2 text-left font-medium w-16">Masa</th>
+                            <th class="px-3 py-2 text-right font-medium">Beyaz ⚪</th>
+                            <th class="px-3 py-2 text-center font-medium w-10">vs</th>
+                            <th class="px-3 py-2 text-left font-medium">⚫ Siyah</th>
+                            <th class="px-3 py-2 text-center font-medium w-16">Tur</th>
+                            <th class="px-3 py-2 text-center font-medium w-24">Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php foreach ($matches as $m): ?>
+                        <tr class="hover:bg-gray-50/50">
+                            <td class="px-3 py-2 text-xs font-bold text-gray-400"><?= $m['table_no'] ?></td>
+                            <td class="px-3 py-2 text-right">
+                                <span class="font-medium text-gray-900"><?= htmlspecialchars($m['white_name'] ?? '?') ?></span>
+                                <span class="text-xs text-gray-400 ml-1">(<?= htmlspecialchars($m['white_sinif'] ?? '') ?>)</span>
+                            </td>
+                            <td class="px-3 py-2 text-center text-xs text-gray-400 font-bold">vs</td>
+                            <td class="px-3 py-2 text-left">
+                                <span class="font-medium text-gray-900"><?= htmlspecialchars($m['black_name'] ?? '?') ?></span>
+                                <span class="text-xs text-gray-400 ml-1">(<?= htmlspecialchars($m['black_sinif'] ?? '') ?>)</span>
+                            </td>
+                            <td class="px-3 py-2 text-center text-xs text-gray-500"><?= $m['round'] ?>. Tur</td>
+                            <td class="px-3 py-2 text-center">
+                                <?php if ($m['result']): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700"><?= htmlspecialchars($m['result']) ?></span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Bekliyor</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- WhatsApp Mesaj Modalı -->
+<div id="whatsapp-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeWhatsAppModal()"></div>
+    <div class="absolute inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp Mesajı
+            </h3>
+            <button onclick="closeWhatsAppModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1">
+            <pre id="whatsapp-message" class="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 rounded-xl p-4 border border-gray-200 font-sans leading-relaxed"></pre>
+        </div>
+        <div class="p-4 border-t border-gray-200 flex gap-2">
+            <button onclick="copyWhatsAppMessage()" id="copy-wa-btn"
+                    class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                Kopyala
+            </button>
+            <button onclick="closeWhatsAppModal()"
+                    class="px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
+                Kapat
+            </button>
+        </div>
     </div>
 </div>
 
@@ -630,6 +782,69 @@ async function saveResult(pairingId) {
         btn.innerHTML = originalContent;
     }
 }
+
+// --- WhatsApp Mesaj Fonksiyonları ---
+const todayGroupsData = <?= json_encode($todayGroups, JSON_UNESCAPED_UNICODE) ?>;
+const viewDateTurkish = <?= json_encode($viewDateTurkish, JSON_UNESCAPED_UNICODE) ?>;
+
+function showWhatsAppModal() {
+    let msg = '♟ SATRANÇ TURNUVASI\n';
+    msg += '📅 ' + viewDateTurkish + '\n';
+
+    for (const [ders, matches] of Object.entries(todayGroupsData)) {
+        msg += '\n📚 ' + ders + ':\n';
+        matches.forEach(m => {
+            const wName = m.white_name || '?';
+            const wSinif = m.white_sinif || '';
+            const bName = m.black_name || '?';
+            const bSinif = m.black_sinif || '';
+            msg += '• Masa ' + m.table_no + ': ' + wName + ' (' + wSinif + ') ⚪ vs ⚫ ' + bName + ' (' + bSinif + ')\n';
+        });
+    }
+
+    msg += '\n📌 Yukarıdaki öğrencilerin ilgili ders saatlerinde satranç turnuvası için çıkışları uygundur.';
+
+    document.getElementById('whatsapp-message').textContent = msg;
+    document.getElementById('whatsapp-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWhatsAppModal() {
+    document.getElementById('whatsapp-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+async function copyWhatsAppMessage() {
+    const msg = document.getElementById('whatsapp-message').textContent;
+    const btn = document.getElementById('copy-wa-btn');
+    try {
+        await navigator.clipboard.writeText(msg);
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Kopyalandı!';
+        btn.classList.replace('bg-green-600', 'bg-emerald-700');
+        showToast('Mesaj panoya kopyalandı!', 'success');
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.replace('bg-emerald-700', 'bg-green-600');
+        }, 2000);
+    } catch (err) {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = msg;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Mesaj panoya kopyalandı!', 'success');
+    }
+}
+
+// ESC tuşu ile modalı kapat
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeWhatsAppModal();
+});
 </script>
 
 <?php include 'footer.php'; ?>
