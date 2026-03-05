@@ -130,8 +130,8 @@ function mobileNavClass($page) {
                     <?php if (navActive('standings.php')): ?><span class="text-xs">♚</span><?php endif; ?>
                     <span>Puan Durumu</span>
                 </a>
-                <a href="players.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('players.php'); ?> transition rounded-lg">
-                    <?php if (navActive('players.php')): ?><span class="text-xs">♞</span><?php endif; ?>
+                <a href="players.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass(['players.php', 'player.php']); ?> transition rounded-lg">
+                    <?php if (navActive(['players.php', 'player.php'])): ?><span class="text-xs">♞</span><?php endif; ?>
                     <span>Katılımcılar</span>
                 </a>
                 <a href="rules.php" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm <?php echo navClass('rules.php'); ?> transition rounded-lg">
@@ -176,7 +176,7 @@ function mobileNavClass($page) {
             <a href="round.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('round.php'); ?>"><span class="text-base">♟</span><span>Fikstür</span></a>
             <a href="results.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('results.php'); ?>"><span class="text-base">♜</span><span>Sonuçlar</span></a>
             <a href="standings.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('standings.php'); ?>"><span class="text-base">♚</span><span>Puan Durumu</span></a>
-            <a href="players.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('players.php'); ?>"><span class="text-base">♞</span><span>Katılımcılar</span></a>
+            <a href="players.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass(['players.php', 'player.php']); ?>"><span class="text-base">♞</span><span>Katılımcılar</span></a>
             <a href="rules.php" class="flex items-center gap-2 pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('rules.php'); ?>"><span class="text-base">♝</span><span>Kurallar</span></a>
             <?php if (isset($_SESSION['admin_logged_in'])): ?>
                 <a href="admin.php" class="block pl-4 pr-4 py-3 text-sm <?php echo mobileNavClass('admin.php'); ?>">Yönetim Paneli</a>

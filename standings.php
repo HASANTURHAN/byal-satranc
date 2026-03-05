@@ -47,6 +47,60 @@ foreach ($allPairings as $p) {
 
 $now = date('Y-m-d H:i:s');
 
+// Sınıf bazlı istatistikler
+$classStats = [];
+foreach ($players as $player) {
+    $sinif = $player['sinif'] ?: 'Belirtilmemiş';
+    if (!isset($classStats[$sinif])) {
+        $classStats[$sinif] = ['sinif' => $sinif, 'count' => 0, 'total_points' => 0, 'wins' => 0, 'draws' => 0, 'losses' => 0];
+    }
+    $classStats[$sinif]['count']++;
+    $classStats[$sinif]['total_points'] += (float)$player['total_points'];
+}
+
+// Her sınıfın G/B/M hesapla
+foreach ($allPairings as $p) {
+    if ($p['result'] === null || $p['result'] === '') continue;
+
+    // Beyaz oyuncunun sınıfını bul
+    if ($p['white_player_id']) {
+        foreach ($players as $pl) {
+            if ((int)$pl['id'] === (int)$p['white_player_id']) {
+                $sinif = $pl['sinif'] ?: 'Belirtilmemiş';
+                if (isset($classStats[$sinif])) {
+                    if ((float)$p['white_points'] >= 1) $classStats[$sinif]['wins']++;
+                    elseif ((float)$p['white_points'] > 0) $classStats[$sinif]['draws']++;
+                    else $classStats[$sinif]['losses']++;
+                }
+                break;
+            }
+        }
+    }
+    // Siyah oyuncunun sınıfını bul
+    if ($p['black_player_id']) {
+        foreach ($players as $pl) {
+            if ((int)$pl['id'] === (int)$p['black_player_id']) {
+                $sinif = $pl['sinif'] ?: 'Belirtilmemiş';
+                if (isset($classStats[$sinif])) {
+                    if ((float)$p['black_points'] >= 1) $classStats[$sinif]['wins']++;
+                    elseif ((float)$p['black_points'] > 0) $classStats[$sinif]['draws']++;
+                    else $classStats[$sinif]['losses']++;
+                }
+                break;
+            }
+        }
+    }
+}
+
+// Ortalama puan hesapla ve sırala
+foreach ($classStats as &$cs) {
+    $cs['avg_points'] = $cs['count'] > 0 ? $cs['total_points'] / $cs['count'] : 0;
+}
+unset($cs);
+usort($classStats, function($a, $b) {
+    return $b['avg_points'] <=> $a['avg_points'];
+});
+
 include 'header.php';
 ?>
 
@@ -201,9 +255,9 @@ include 'header.php';
                             </div>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-sm font-medium text-gray-900 <?php echo $i < 3 ? 'font-bold' : ''; ?>">
+                                    <a href="player.php?id=<?php echo (int)$player['id']; ?>" class="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition <?php echo $i < 3 ? 'font-bold' : ''; ?>">
                                         <?php echo htmlspecialchars($player['name']); ?>
-                                    </span>
+                                    </a>
                                     <?php if ($player['is_seed']): ?>
                                     <span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
                                         &#9733; Seri Başı
@@ -323,6 +377,81 @@ include 'header.php';
         </div>
     </div>
 </div>
+
+<!-- Sınıf Bazlı Sıralama -->
+<?php if (!empty($classStats) && count($classStats) > 1): ?>
+<div class="card overflow-hidden mb-8">
+    <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">&#9814;</span>
+            <h3 class="font-bold text-gray-900 text-lg">Sınıf Bazlı Sıralama</h3>
+        </div>
+        <span class="text-xs text-gray-400 font-medium"><?php echo count($classStats); ?> sınıf</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">Sıra</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sınıf</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Öğrenci</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Toplam Puan</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Ort. Puan</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Galibiyet</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Berabere</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Mağlubiyet</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                <?php foreach ($classStats as $ci => $cs):
+                    $rowBg = '';
+                    $medalIcon = '';
+                    if ($ci === 0) { $rowBg = 'bg-amber-50/50'; $medalIcon = '<span class="text-lg">&#9812;</span>'; }
+                    elseif ($ci === 1) { $rowBg = 'bg-gray-50/50'; $medalIcon = '<span class="text-lg">&#9815;</span>'; }
+                    elseif ($ci === 2) { $rowBg = 'bg-orange-50/30'; $medalIcon = '<span class="text-lg">&#9814;</span>'; }
+                    else { $medalIcon = ($ci + 1) . '.'; }
+                    $totalGames = $cs['wins'] + $cs['draws'] + $cs['losses'];
+                ?>
+                <tr class="<?php echo $rowBg; ?> hover:bg-blue-50/50 transition">
+                    <td class="px-4 py-3 text-sm font-medium <?php echo $ci < 3 ? 'text-gray-900 font-bold' : 'text-gray-400'; ?>">
+                        <?php echo $medalIcon; ?>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-sm font-semibold text-gray-900"><?php echo htmlspecialchars($cs['sinif']); ?></span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="inline-flex items-center px-2 py-1 rounded-lg bg-gray-100 text-xs font-bold text-gray-600"><?php echo $cs['count']; ?></span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="text-sm font-bold text-gray-700"><?php echo number_format($cs['total_points'], 1); ?></span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm
+                            <?php
+                            if ($ci === 0) echo 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200';
+                            elseif ($ci === 1) echo 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-300';
+                            elseif ($ci === 2) echo 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-700 border border-orange-200';
+                            else echo 'bg-gray-50 text-gray-700 border border-gray-200';
+                            ?>">
+                            <?php echo number_format($cs['avg_points'], 2); ?>
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center hidden sm:table-cell">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 text-xs font-bold"><?php echo $cs['wins']; ?></span>
+                    </td>
+                    <td class="px-4 py-3 text-center hidden sm:table-cell">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-xs font-bold"><?php echo $cs['draws']; ?></span>
+                    </td>
+                    <td class="px-4 py-3 text-center hidden sm:table-cell">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-400 text-xs font-bold"><?php echo $cs['losses']; ?></span>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php else: ?>
 <div class="card p-12 text-center">

@@ -153,7 +153,11 @@ include 'header.php';
                         <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white border border-gray-200 rounded-full px-1.5 py-0 shadow-sm text-gray-500">Beyaz</span>
                     </div>
                     <p class="text-sm font-semibold <?php echo $whiteText; ?> mt-2 leading-tight">
+                        <?php if (!empty($match['white_id'])): ?>
+                        <a href="player.php?id=<?php echo (int)$match['white_id']; ?>" class="hover:underline"><?php echo htmlspecialchars($match['white_name'] ?? 'Bilinmiyor'); ?></a>
+                        <?php else: ?>
                         <?php echo htmlspecialchars($match['white_name'] ?? 'Bilinmiyor'); ?>
+                        <?php endif; ?>
                     </p>
                     <?php if (!empty($match['white_sinif'])): ?>
                     <p class="text-xs text-gray-400 mt-0.5"><?php echo htmlspecialchars($match['white_sinif']); ?></p>
@@ -189,7 +193,11 @@ include 'header.php';
                         <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-gray-800 text-white border border-gray-700 rounded-full px-1.5 py-0 shadow-sm">Siyah</span>
                     </div>
                     <p class="text-sm font-semibold <?php echo $blackText; ?> mt-2 leading-tight">
+                        <?php if (!empty($match['black_id'])): ?>
+                        <a href="player.php?id=<?php echo (int)$match['black_id']; ?>" class="hover:underline"><?php echo htmlspecialchars($match['black_name'] ?? 'Bilinmiyor'); ?></a>
+                        <?php else: ?>
                         <?php echo htmlspecialchars($match['black_name'] ?? 'Bilinmiyor'); ?>
+                        <?php endif; ?>
                     </p>
                     <?php if (!empty($match['black_sinif'])): ?>
                     <p class="text-xs text-gray-400 mt-0.5"><?php echo htmlspecialchars($match['black_sinif']); ?></p>

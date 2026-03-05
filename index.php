@@ -31,6 +31,82 @@ $top5 = $pdo->query("SELECT * FROM players ORDER BY total_points DESC, name ASC 
 // Seri başı oyuncular
 $seeds = $pdo->query("SELECT * FROM players WHERE is_seed = 1 ORDER BY id")->fetchAll();
 
+// Turnuva ilerleme - tur bazlı tamamlanma oranları
+$totalRoundsTarget = 6;
+$allRounds = $pdo->query("SELECT DISTINCT round FROM pairings ORDER BY round ASC")->fetchAll(PDO::FETCH_COLUMN);
+$roundProgress = [];
+foreach ($allRounds as $r) {
+    $stT = $pdo->prepare("SELECT COUNT(*) FROM pairings WHERE round = ?");
+    $stT->execute([(int)$r]);
+    $rTotal = (int)$stT->fetchColumn();
+    $stC = $pdo->prepare("SELECT COUNT(*) FROM pairings WHERE round = ? AND result IS NOT NULL AND result != ''");
+    $stC->execute([(int)$r]);
+    $rCompleted = (int)$stC->fetchColumn();
+    $roundProgress[(int)$r] = ['total' => $rTotal, 'completed' => $rCompleted, 'pct' => $rTotal > 0 ? round($rCompleted / $rTotal * 100) : 0];
+}
+
+// Yaklaşan maçlar (bugün ve sonrası, sonuç girilmemiş)
+$today = date('Y-m-d');
+$upcomingStmt = $pdo->prepare("
+    SELECT p.*, w.name AS white_name, w.sinif AS white_sinif,
+           b.name AS black_name, b.sinif AS black_sinif
+    FROM pairings p
+    LEFT JOIN players w ON p.white_player_id = w.id
+    LEFT JOIN players b ON p.black_player_id = b.id
+    WHERE (p.result IS NULL OR p.result = '')
+      AND p.match_date >= ?
+    ORDER BY p.match_date ASC, p.match_time ASC, p.table_no ASC
+    LIMIT 10
+");
+$upcomingStmt->execute([$today]);
+$upcomingMatches = $upcomingStmt->fetchAll();
+
+// Yaklaşan maçları tarih+ders bazlı grupla
+$upcomingGroups = [];
+foreach ($upcomingMatches as $um) {
+    $dateKey = $um['match_date'] ?: 'Belirsiz';
+    $timeKey = $um['match_time'] ?: '';
+    $key = $dateKey . ($timeKey ? ' | ' . $timeKey : '');
+    $upcomingGroups[$key][] = $um;
+}
+
+// Beyaz/Siyah kazanma ve beraberlik istatistikleri (genel)
+$whiteWinsAll = (int)$pdo->query("SELECT COUNT(*) FROM pairings WHERE result = '1-0'")->fetchColumn();
+$blackWinsAll = (int)$pdo->query("SELECT COUNT(*) FROM pairings WHERE result = '0-1'")->fetchColumn();
+$drawsAll = (int)$pdo->query("SELECT COUNT(*) FROM pairings WHERE result = '1/2-1/2'")->fetchColumn();
+$totalCompletedAll = $whiteWinsAll + $blackWinsAll + $drawsAll;
+
+// Sınıf bazlı sıralama özeti (top 3)
+$allPlayersForClass = $pdo->query("SELECT sinif, total_points FROM players ORDER BY total_points DESC")->fetchAll();
+$classStatsIndex = [];
+foreach ($allPlayersForClass as $pl) {
+    $sinif = $pl['sinif'] ?: 'Belirtilmemiş';
+    if (!isset($classStatsIndex[$sinif])) {
+        $classStatsIndex[$sinif] = ['sinif' => $sinif, 'count' => 0, 'total_points' => 0];
+    }
+    $classStatsIndex[$sinif]['count']++;
+    $classStatsIndex[$sinif]['total_points'] += (float)$pl['total_points'];
+}
+foreach ($classStatsIndex as &$csi) {
+    $csi['avg_points'] = $csi['count'] > 0 ? $csi['total_points'] / $csi['count'] : 0;
+}
+unset($csi);
+usort($classStatsIndex, function($a, $b) { return $b['avg_points'] <=> $a['avg_points']; });
+$top3Classes = array_slice($classStatsIndex, 0, 3);
+
+// Türkçe tarih formatlama
+function formatTurkishDateIndex($dateStr) {
+    if (empty($dateStr)) return '';
+    $ts = strtotime($dateStr);
+    if ($ts === false) return htmlspecialchars($dateStr);
+    $aylar = ['', 'Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    $gunler = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+    $gun = (int)date('j', $ts);
+    $ay = (int)date('n', $ts);
+    $haftaGunu = (int)date('w', $ts);
+    return $gun . ' ' . $aylar[$ay] . ', ' . $gunler[$haftaGunu];
+}
+
 include 'header.php';
 ?>
 
@@ -98,6 +174,149 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Turnuva İlerlemesi -->
+<?php if (!empty($allRounds)): ?>
+<div class="card p-5 mb-8">
+    <h2 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        Turnuva İlerlemesi
+    </h2>
+    <div class="flex items-center gap-1">
+        <?php for ($t = 1; $t <= $totalRoundsTarget; $t++):
+            $rp = $roundProgress[$t] ?? null;
+            $pct = $rp ? $rp['pct'] : 0;
+            $isPlayed = $rp && $rp['total'] > 0;
+            $isDone = $rp && $rp['pct'] === 100;
+            $isCurrent = $isPlayed && !$isDone;
+        ?>
+        <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full h-3 rounded-full overflow-hidden <?php echo $isPlayed ? '' : 'opacity-40'; ?> bg-gray-200">
+                <div class="h-full rounded-full transition-all duration-700
+                    <?php echo $isDone ? 'bg-green-500' : ($isCurrent ? 'bg-amber-500' : 'bg-gray-300'); ?>"
+                     style="width: <?php echo $pct; ?>%"></div>
+            </div>
+            <div class="flex items-center gap-1">
+                <?php if ($isDone): ?>
+                    <span class="text-green-500 text-xs">&#10003;</span>
+                <?php endif; ?>
+                <span class="text-[10px] font-bold <?php echo $isCurrent ? 'text-amber-600' : ($isDone ? 'text-green-600' : 'text-gray-400'); ?>">T<?php echo $t; ?></span>
+            </div>
+        </div>
+        <?php if ($t < $totalRoundsTarget): ?>
+        <div class="w-2 h-0.5 bg-gray-300 mt-[-10px]"></div>
+        <?php endif; ?>
+        <?php endfor; ?>
+    </div>
+</div>
+<?php endif; ?>
+
+<div class="grid md:grid-cols-2 gap-6 mb-8">
+    <!-- Yaklaşan Maçlar -->
+    <div class="card p-6">
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Yaklaşan Maçlar
+        </h2>
+        <?php if (empty($upcomingMatches)): ?>
+            <p class="text-gray-500 text-sm text-center py-4">Planlanmış yaklaşan maç bulunmuyor.</p>
+        <?php else: ?>
+            <div class="space-y-3">
+                <?php foreach ($upcomingGroups as $groupKey => $groupMatches):
+                    $parts = explode(' | ', $groupKey);
+                    $dateLabel = formatTurkishDateIndex($parts[0] ?? '');
+                    $timeLabel = $parts[1] ?? '';
+                ?>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-lg"><?php echo $dateLabel ?: 'Belirsiz'; ?></span>
+                        <?php if ($timeLabel): ?>
+                        <span class="text-xs font-semibold text-violet-600"><?php echo htmlspecialchars($timeLabel); ?></span>
+                        <?php endif; ?>
+                        <span class="text-xs text-gray-400"><?php echo count($groupMatches); ?> maç</span>
+                    </div>
+                    <?php foreach (array_slice($groupMatches, 0, 3) as $um): ?>
+                    <div class="flex items-center gap-2 py-1.5 text-sm">
+                        <span class="text-xs text-gray-400 w-8">M<?php echo (int)$um['table_no']; ?></span>
+                        <span class="flex-1 text-right font-medium text-gray-900 truncate"><?php echo htmlspecialchars($um['white_name'] ?? '?'); ?></span>
+                        <span class="text-xs text-gray-400 font-bold px-1">vs</span>
+                        <span class="flex-1 font-medium text-gray-900 truncate"><?php echo htmlspecialchars($um['black_name'] ?? '?'); ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php if (count($groupMatches) > 3): ?>
+                    <div class="text-xs text-gray-400 pl-8">+<?php echo count($groupMatches) - 3; ?> maç daha</div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- İstatistikler & Sınıf Sıralaması -->
+    <div class="space-y-6">
+        <!-- Beyaz/Siyah Kazanma Oranı -->
+        <?php if ($totalCompletedAll > 0): ?>
+        <div class="card p-5">
+            <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <span class="text-lg">&#9812;&#9818;</span> Sonuç Dağılımı
+            </h3>
+            <div class="flex h-6 rounded-full overflow-hidden bg-gray-100 mb-3">
+                <?php if ($whiteWinsAll > 0): ?>
+                <div class="bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center" style="width: <?php echo round($whiteWinsAll / $totalCompletedAll * 100); ?>%">
+                    <span class="text-[10px] font-bold text-gray-700"><?php echo round($whiteWinsAll / $totalCompletedAll * 100); ?>%</span>
+                </div>
+                <?php endif; ?>
+                <?php if ($drawsAll > 0): ?>
+                <div class="bg-gradient-to-r from-amber-300 to-amber-400 flex items-center justify-center" style="width: <?php echo round($drawsAll / $totalCompletedAll * 100); ?>%">
+                    <span class="text-[10px] font-bold text-amber-800"><?php echo round($drawsAll / $totalCompletedAll * 100); ?>%</span>
+                </div>
+                <?php endif; ?>
+                <?php if ($blackWinsAll > 0): ?>
+                <div class="bg-gradient-to-r from-gray-700 to-gray-900 flex items-center justify-center" style="width: <?php echo round($blackWinsAll / $totalCompletedAll * 100); ?>%">
+                    <span class="text-[10px] font-bold text-white"><?php echo round($blackWinsAll / $totalCompletedAll * 100); ?>%</span>
+                </div>
+                <?php endif; ?>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500">
+                <span>&#9812; Beyaz: <strong class="text-gray-700"><?php echo $whiteWinsAll; ?></strong></span>
+                <span>Berabere: <strong class="text-amber-600"><?php echo $drawsAll; ?></strong></span>
+                <span>&#9818; Siyah: <strong class="text-gray-700"><?php echo $blackWinsAll; ?></strong></span>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Sınıf Sıralaması Özeti -->
+        <?php if (count($top3Classes) >= 2): ?>
+        <div class="card p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <span class="text-lg">&#9814;</span> Sınıf Sıralaması
+                </h3>
+                <a href="standings.php" class="text-xs text-amber-600 hover:text-amber-700 font-medium">Tümünü Gör &rarr;</a>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <?php
+                $podiumStyles = [
+                    ['bg' => 'bg-gradient-to-b from-amber-50 to-yellow-50', 'border' => 'border-amber-300', 'text' => 'text-amber-700', 'icon' => '&#9812;'],
+                    ['bg' => 'bg-gradient-to-b from-gray-50 to-gray-100', 'border' => 'border-gray-300', 'text' => 'text-gray-600', 'icon' => '&#9815;'],
+                    ['bg' => 'bg-gradient-to-b from-orange-50 to-orange-100', 'border' => 'border-orange-300', 'text' => 'text-orange-700', 'icon' => '&#9814;'],
+                ];
+                foreach ($top3Classes as $ci => $cls):
+                    $ps = $podiumStyles[$ci] ?? $podiumStyles[2];
+                ?>
+                <div class="text-center p-3 rounded-xl <?php echo $ps['bg']; ?> border <?php echo $ps['border']; ?>">
+                    <div class="text-xl mb-1"><?php echo $ps['icon']; ?></div>
+                    <div class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($cls['sinif']); ?></div>
+                    <div class="text-lg font-extrabold <?php echo $ps['text']; ?>"><?php echo number_format($cls['avg_points'], 2); ?></div>
+                    <div class="text-[10px] text-gray-500">ort. puan</div>
+                    <div class="text-[10px] text-gray-400"><?php echo $cls['count']; ?> öğrenci</div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div class="grid md:grid-cols-2 gap-8 mb-8">
     <!-- Top 5 Sıralama -->
     <div class="card p-6">
@@ -119,7 +338,7 @@ include 'header.php';
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="font-semibold text-gray-900 truncate">
-                                <?php echo htmlspecialchars($p['name']); ?>
+                                <a href="player.php?id=<?php echo (int)$p['id']; ?>" class="hover:text-blue-600 hover:underline transition"><?php echo htmlspecialchars($p['name']); ?></a>
                                 <?php if ($p['is_seed']): ?>
                                     <span class="inline-flex items-center px-1.5 py-0.5 text-xs seed-badge rounded-full ml-1">⭐</span>
                                 <?php endif; ?>

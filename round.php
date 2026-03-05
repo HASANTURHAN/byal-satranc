@@ -297,6 +297,11 @@ include 'header.php';
                 <p class="text-gray-400 text-xs"><?php echo $totalTables; ?> masa &middot; <?php echo $completedCount; ?> tamamlandı</p>
             </div>
         </div>
+        <div class="flex items-center gap-2">
+            <a href="print.php?type=pairings&round=<?php echo $selectedRound; ?>" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white transition" title="Esleme Listesi Yazdir">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Yazdir
+            </a>
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
             <?php echo ($completedCount === $totalTables && $totalTables > 0)
                 ? 'bg-green-500/20 text-green-300 border border-green-500/30'
@@ -306,6 +311,7 @@ include 'header.php';
             <?php endif; ?>
             <?php echo ($completedCount === $totalTables && $totalTables > 0) ? 'Tamamlandı' : 'Devam Ediyor'; ?>
         </span>
+        </div>
     </div>
 
     <?php if (empty($pairings)): ?>

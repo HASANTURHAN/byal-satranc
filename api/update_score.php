@@ -53,6 +53,16 @@ if (!$pairing) {
     exit;
 }
 
+// Mevcut sonucu olan maçta düzeltme sadece admin yapabilir (hakem yapamaz)
+$existingResult = $pairing['result'];
+if ($existingResult !== null && $existingResult !== '') {
+    if (!is_super_admin()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Sonuç düzeltme yetkisi sadece yöneticiye aittir.']);
+        exit;
+    }
+}
+
 $roundNo = $pairing['round'];
 $tableNo = $pairing['table_no'];
 $whitePlayerId = $pairing['white_player_id'];

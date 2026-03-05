@@ -108,6 +108,7 @@ function formatTurkishDateAdmin($dateStr) {
 $viewDateTurkish = formatTurkishDateAdmin($viewDate);
 
 $csrfToken = csrf_token();
+$isSuperAdmin = is_super_admin();
 
 include 'header.php';
 ?>
@@ -118,7 +119,17 @@ include 'header.php';
         <h2 class="text-2xl font-bold text-gray-900">Skor Girişi Paneli</h2>
         <p class="text-sm text-gray-500 mt-1">Maç sonuçlarını girin ve fotoğrafları yükleyin.</p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex gap-2 flex-wrap">
+        <?php if ($selectedRound > 0 && !empty($pairings)): ?>
+        <a href="print.php?type=pairings&round=<?= $selectedRound ?>" target="_blank" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Esleme Listesi
+        </a>
+        <a href="print.php?type=form&round=<?= $selectedRound ?>" target="_blank" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Mac Formlari
+        </a>
+        <?php endif; ?>
         <a href="standings.php" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-50 transition">
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             Puan Durumu
@@ -359,6 +370,9 @@ include 'header.php';
                 <?php endif; ?>
                 <?php if ($pairing['result']): ?>
                     <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Tamamlandı</span>
+                    <?php if ($isSuperAdmin): ?>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 cursor-pointer hover:bg-orange-200 transition" onclick="enableCorrection(<?= $pairing['id'] ?>)" title="Sonucu düzelt">Düzelt</span>
+                    <?php endif; ?>
                 <?php else: ?>
                     <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Bekliyor</span>
                 <?php endif; ?>
@@ -407,7 +421,11 @@ include 'header.php';
                 </div>
 
                 <!-- VS / Sonuç Butonları -->
-                <div class="flex flex-row lg:flex-col items-center justify-center gap-1.5 px-2">
+                <?php
+                    $canEdit = !$pairing['result'] || $isSuperAdmin;
+                    $hideForHakem = $pairing['result'] && !$isSuperAdmin;
+                ?>
+                <div class="flex flex-row lg:flex-col items-center justify-center gap-1.5 px-2 pairing-buttons-<?= $pairing['id'] ?>" <?= $hideForHakem ? 'style="display:none"' : '' ?>>
                     <button type="button"
                             onclick="selectResult(<?= $pairing['id'] ?>, '1-0')"
                             class="result-btn result-btn-<?= $pairing['id'] ?> w-16 py-1.5 rounded-lg text-xs font-bold transition
@@ -458,7 +476,7 @@ include 'header.php';
             </div>
 
             <!-- Fotoğraf Yükleme ve Kaydet -->
-            <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-end gap-3">
+            <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-end gap-3 pairing-actions-<?= $pairing['id'] ?>" <?= $hideForHakem ? 'style="display:none"' : '' ?>>
                 <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">
@@ -548,6 +566,16 @@ const csrfToken = '<?= $csrfToken ?>';
 selectedResults[<?= $p['id'] ?>] = '<?= $p['result'] ?>';
 <?php endif; ?>
 <?php endforeach; ?>
+
+function enableCorrection(pairingId) {
+    if (!confirm('Bu maçın sonucunu düzeltmek istediğinize emin misiniz?')) return;
+    // Show the buttons and actions for this pairing
+    const btns = document.querySelector('.pairing-buttons-' + pairingId);
+    const acts = document.querySelector('.pairing-actions-' + pairingId);
+    if (btns) btns.style.display = '';
+    if (acts) acts.style.display = '';
+    showToast('Yeni sonucu seçip kaydedin.', 'success');
+}
 
 function selectResult(pairingId, result) {
     selectedResults[pairingId] = result;
@@ -719,11 +747,24 @@ async function generateNextRound() {
     }
 }
 
+// Track which pairings already had results (for correction confirmation)
+const existingResults = {};
+<?php foreach ($pairings as $p): ?>
+<?php if ($p['result']): ?>
+existingResults[<?= $p['id'] ?>] = '<?= $p['result'] ?>';
+<?php endif; ?>
+<?php endforeach; ?>
+
 async function saveResult(pairingId) {
     const result = selectedResults[pairingId];
     if (!result) {
         showMessage(pairingId, 'Lütfen bir sonuç seçin (1-0, 1/2-1/2 veya 0-1).', 'error');
         return;
+    }
+
+    // Correction confirmation
+    if (existingResults[pairingId] && existingResults[pairingId] !== result) {
+        if (!confirm('Mevcut sonuç: ' + existingResults[pairingId] + '\nYeni sonuç: ' + result + '\n\nSonucu düzeltmek istediğinize emin misiniz?')) return;
     }
 
     const btn = document.getElementById('save-btn-' + pairingId);

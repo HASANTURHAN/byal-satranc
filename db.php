@@ -118,6 +118,11 @@ function is_admin() {
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
+function is_super_admin() {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    return is_admin() && isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'admin';
+}
+
 // Turnuva ayarını oku
 function get_setting($key, $default = '') {
     global $pdo;

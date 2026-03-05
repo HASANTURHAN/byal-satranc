@@ -130,7 +130,7 @@ include 'header.php';
                             </div>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($player['name']); ?></span>
+                                    <a href="player.php?id=<?php echo (int)$player['id']; ?>" class="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition"><?php echo htmlspecialchars($player['name']); ?></a>
                                     <?php if ($player['is_seed']): ?>
                                     <span class="seed-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
                                         &#9733; Seri Başı
